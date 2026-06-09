@@ -100,7 +100,7 @@ export interface MatchDetail {
   awayScore?: number | null;
   /** @nullable */
   matchNumber?: number | null;
-  myPrediction?: Prediction;
+  myPrediction?: Prediction | null;
   predictionStats: PredictionStats;
 }
 

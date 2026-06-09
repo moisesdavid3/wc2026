@@ -125,7 +125,7 @@ export const GetMatchResponse = zod.object({
   "homeScore": zod.number().nullish(),
   "awayScore": zod.number().nullish(),
   "matchNumber": zod.number().nullish(),
-  "myPrediction": zod.object({
+  "myPrediction": zod.union([zod.object({
   "id": zod.number(),
   "userId": zod.number(),
   "matchId": zod.number(),
@@ -134,7 +134,7 @@ export const GetMatchResponse = zod.object({
   "points": zod.number().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
-}).optional(),
+}),zod.null()]).optional(),
   "predictionStats": zod.object({
   "totalPredictions": zod.number(),
   "homeWinPct": zod.number(),

@@ -1,128 +1,295 @@
-import { useState } from "react";
-import { useListMatches, useListMyPredictions } from "@workspace/api-client-react";
+import { useState, useCallback } from "react";
+import {
+  useListMatches,
+  useListMyPredictions,
+  useUpsertPrediction,
+  getListMyPredictionsQueryKey,
+} from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Countdown } from "@/components/countdown";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { Check, MapPin, Clock } from "lucide-react";
+
+// Colombia is UTC-5 year-round (no DST)
+function formatCOT(utcString: string) {
+  const date = new Date(utcString);
+  const cot = new Date(date.getTime() - 5 * 60 * 60 * 1000);
+  const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const day = days[cot.getUTCDay()];
+  const d = cot.getUTCDate();
+  const mon = months[cot.getUTCMonth()];
+  const h = cot.getUTCHours();
+  const m = cot.getUTCMinutes().toString().padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = ((h % 12) || 12);
+  return { date: `${day} ${d} ${mon}`, time: `${h12}:${m} ${ampm} COT` };
+}
 
 export function Matches() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  
+  const [filterGroup, setFilterGroup] = useState<string>("all");
+  const [scores, setScores] = useState<Record<number, { home: string; away: string }>>({});
+  const [saving, setSaving] = useState<Record<number, boolean>>({});
+
   const { data: matches, isLoading: isLoadingMatches } = useListMatches();
   const { data: predictions, isLoading: isLoadingPredictions } = useListMyPredictions();
+  const upsertPrediction = useUpsertPrediction();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const predictionMap = new Map((predictions || []).map((p) => [p.matchId, p]));
+
+  const handleScoreChange = useCallback(
+    (matchId: number, side: "home" | "away", value: string) => {
+      const clean = value.replace(/[^0-9]/g, "").slice(0, 2);
+      setScores((prev) => ({
+        ...prev,
+        [matchId]: { home: prev[matchId]?.home ?? "", away: prev[matchId]?.away ?? "", [side]: clean },
+      }));
+    },
+    []
+  );
+
+  const handleSave = useCallback(
+    (matchId: number) => {
+      const s = scores[matchId];
+      if (!s || s.home === "" || s.away === "") return;
+      setSaving((prev) => ({ ...prev, [matchId]: true }));
+      upsertPrediction.mutate(
+        { data: { matchId, homeScore: parseInt(s.home), awayScore: parseInt(s.away) } },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getListMyPredictionsQueryKey() });
+            setScores((prev) => { const n = { ...prev }; delete n[matchId]; return n; });
+            toast({ title: "✓ Predicción guardada" });
+          },
+          onError: () => {
+            toast({ title: "Error al guardar", variant: "destructive" });
+          },
+          onSettled: () => setSaving((prev) => ({ ...prev, [matchId]: false })),
+        }
+      );
+    },
+    [scores, upsertPrediction, queryClient, toast]
+  );
 
   if (isLoadingMatches || isLoadingPredictions) {
-    return <div className="animate-pulse space-y-4">
-      <div className="h-10 bg-muted w-1/3 rounded"></div>
-      <div className="h-20 bg-card rounded-xl border border-border"></div>
-      <div className="h-20 bg-card rounded-xl border border-border"></div>
-    </div>;
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="h-10 bg-muted w-1/3 rounded" />
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-24 bg-card rounded-xl border border-border" />
+        ))}
+      </div>
+    );
   }
 
-  let filteredMatches = matches || [];
-  if (filterStatus !== "all") {
-    filteredMatches = filteredMatches.filter(m => m.status === filterStatus);
-  }
+  let filtered = matches || [];
+  if (filterStatus !== "all") filtered = filtered.filter((m) => m.status === filterStatus);
+  if (filterGroup !== "all") filtered = filtered.filter((m) => m.group === filterGroup);
 
-  const predictionMap = new Map((predictions || []).map(p => [p.matchId, p]));
+  const groups = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-black tracking-tight uppercase">Fixtures</h1>
-        
-        <div className="flex items-center gap-4">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[180px] bg-card" data-testid="select-status">
-              <SelectValue placeholder="Filter by status" />
+        <div className="flex items-center gap-3">
+          <Select value={filterGroup} onValueChange={setFilterGroup}>
+            <SelectTrigger className="w-[130px] bg-card">
+              <SelectValue placeholder="Grupo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Matches</SelectItem>
-              <SelectItem value="upcoming">Upcoming</SelectItem>
-              <SelectItem value="live">Live</SelectItem>
-              <SelectItem value="finished">Finished</SelectItem>
+              <SelectItem value="all">Todos los grupos</SelectItem>
+              {groups.map((g) => (
+                <SelectItem key={g} value={g}>Grupo {g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[160px] bg-card">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="upcoming">Por jugar</SelectItem>
+              <SelectItem value="live">En vivo</SelectItem>
+              <SelectItem value="finished">Terminados</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {filteredMatches.length === 0 ? (
-          <div className="text-center p-8 text-muted-foreground bg-card rounded-xl border border-border">
-            No matches found.
+      {/* Match list */}
+      <div className="grid gap-3">
+        {filtered.length === 0 ? (
+          <div className="text-center p-10 text-muted-foreground bg-card rounded-xl border border-border">
+            No se encontraron partidos.
           </div>
         ) : (
-          filteredMatches.map(match => {
+          filtered.map((match) => {
             const prediction = predictionMap.get(match.id);
-            
+            const isUpcoming = match.status === "upcoming";
+            const isLive = match.status === "live";
+            const isFinished = match.status === "finished";
+            const cot = formatCOT(match.matchDate);
+            const draft = scores[match.id];
+            const isSaving = saving[match.id] ?? false;
+            const hasDraft = draft && draft.home !== "" && draft.away !== "";
+
             return (
-              <Link key={match.id} href={`/matches/${match.id}`}>
-                <Card className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer group">
-                  <CardContent className="p-0">
-                    <div className="flex flex-col sm:flex-row items-center">
-                      {/* Left: Info */}
-                      <div className="p-4 sm:w-48 border-b sm:border-b-0 sm:border-r border-border flex flex-col justify-center bg-muted/20">
-                        <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                          {match.group || match.round}
-                        </div>
-                        {match.status === 'upcoming' ? (
-                          <Countdown targetDate={match.matchDate} />
-                        ) : match.status === 'live' ? (
-                          <div className="text-primary font-bold animate-pulse">LIVE</div>
-                        ) : (
-                          <div className="text-muted-foreground font-bold">FT</div>
-                        )}
+              <Card
+                key={match.id}
+                className="bg-card border-border hover:border-primary/40 transition-colors"
+              >
+                <CardContent className="p-0">
+                  <div className="flex flex-col lg:flex-row">
+
+                    {/* ── Info panel ── */}
+                    <div className="lg:w-52 p-4 border-b lg:border-b-0 lg:border-r border-border bg-muted/10 flex flex-col justify-center gap-1.5">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary">
+                        {match.group ? `Grupo ${match.group}` : match.round}
                       </div>
 
-                      {/* Middle: Teams */}
-                      <div className="flex-1 p-4 flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3 w-1/3 justify-end">
-                          <span className="font-bold sm:text-lg">{match.homeTeam?.code || match.homeTeam?.name}</span>
-                          <span className="text-2xl">{match.homeTeam?.flag}</span>
+                      {/* Colombia time */}
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                        <div>
+                          <div className="text-xs font-semibold text-foreground leading-tight">{cot.date}</div>
+                          <div className="text-xs text-primary font-mono font-bold">{cot.time}</div>
                         </div>
-                        
-                        <div className="flex flex-col items-center justify-center px-4 w-1/3">
-                          {match.status === 'upcoming' ? (
-                            <div className="text-muted-foreground font-mono font-bold">- : -</div>
+                      </div>
+
+                      {/* Stadium */}
+                      <div className="flex items-start gap-1.5">
+                        <MapPin className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
+                        <div>
+                          <div className="text-[11px] text-foreground/80 leading-tight">{match.stadium}</div>
+                          <div className="text-[11px] text-muted-foreground">{match.city}</div>
+                        </div>
+                      </div>
+
+                      {/* Status badge */}
+                      {isLive && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary uppercase mt-1 animate-pulse">
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full" />EN VIVO
+                        </span>
+                      )}
+                      {isFinished && (
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Finalizado</span>
+                      )}
+                    </div>
+
+                    {/* ── Teams & score ── */}
+                    <Link href={`/matches/${match.id}`} className="flex-1 p-4 flex items-center cursor-pointer">
+                      <div className="flex items-center justify-between w-full">
+                        {/* Home */}
+                        <div className="flex items-center gap-2 w-[38%] justify-end">
+                          <span className="font-bold text-base sm:text-lg truncate">{match.homeTeam?.name ?? "TBD"}</span>
+                          <span className="text-2xl shrink-0">{match.homeTeam?.flag ?? "🏳️"}</span>
+                        </div>
+
+                        {/* Score / VS */}
+                        <div className="flex flex-col items-center justify-center px-3 w-[24%] shrink-0">
+                          {isUpcoming ? (
+                            <div className="text-muted-foreground font-mono font-bold text-lg">VS</div>
                           ) : (
-                            <div className="text-2xl font-black font-mono">
-                              {match.homeScore} : {match.awayScore}
+                            <div className="text-2xl font-black font-mono text-foreground">
+                              {match.homeScore} – {match.awayScore}
                             </div>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-3 w-1/3 justify-start">
-                          <span className="text-2xl">{match.awayTeam?.flag}</span>
-                          <span className="font-bold sm:text-lg">{match.awayTeam?.code || match.awayTeam?.name}</span>
+                        {/* Away */}
+                        <div className="flex items-center gap-2 w-[38%] justify-start">
+                          <span className="text-2xl shrink-0">{match.awayTeam?.flag ?? "🏳️"}</span>
+                          <span className="font-bold text-base sm:text-lg truncate">{match.awayTeam?.name ?? "TBD"}</span>
                         </div>
                       </div>
+                    </Link>
 
-                      {/* Right: Prediction */}
-                      <div className="p-4 sm:w-48 border-t sm:border-t-0 sm:border-l border-border bg-primary/5 flex flex-col items-center justify-center h-full w-full sm:h-auto">
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                          Your Prediction
-                        </div>
-                        {prediction ? (
+                    {/* ── Prediction panel ── */}
+                    <div className="lg:w-56 p-4 border-t lg:border-t-0 lg:border-l border-border bg-primary/5 flex flex-col items-center justify-center gap-2">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        Tu predicción
+                      </div>
+
+                      {isFinished || isLive ? (
+                        /* Locked — show saved prediction or dash */
+                        prediction ? (
                           <div className="flex flex-col items-center">
-                            <div className="text-lg font-mono font-bold text-foreground">
-                              {prediction.homeScore} - {prediction.awayScore}
+                            <div className="text-xl font-mono font-black text-foreground">
+                              {prediction.homeScore} – {prediction.awayScore}
                             </div>
-                            {prediction.points !== undefined && prediction.points !== null && (
-                              <div className="text-sm font-bold text-primary">
-                                +{prediction.points} PTS
+                            {prediction.points != null && (
+                              <div className={`text-sm font-bold ${prediction.points > 0 ? "text-primary" : "text-muted-foreground"}`}>
+                                +{prediction.points} pts
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div className="text-sm text-muted-foreground italic">None</div>
-                        )}
-                      </div>
+                          <div className="text-sm text-muted-foreground italic">—</div>
+                        )
+                      ) : (
+                        /* Upcoming — editable inputs */
+                        <div className="w-full space-y-2">
+                          <div className="flex items-center justify-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="99"
+                              placeholder={prediction ? String(prediction.homeScore) : "0"}
+                              value={draft?.home ?? ""}
+                              onChange={(e) => handleScoreChange(match.id, "home", e.target.value)}
+                              className="w-14 text-center text-xl font-mono font-black h-11 bg-background border-border focus:border-primary p-1"
+                            />
+                            <span className="font-black text-muted-foreground">–</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="99"
+                              placeholder={prediction ? String(prediction.awayScore) : "0"}
+                              value={draft?.away ?? ""}
+                              onChange={(e) => handleScoreChange(match.id, "away", e.target.value)}
+                              className="w-14 text-center text-xl font-mono font-black h-11 bg-background border-border focus:border-primary p-1"
+                            />
+                          </div>
+
+                          {prediction && !hasDraft && (
+                            <div className="text-center text-xs text-muted-foreground">
+                              Guardado: {prediction.homeScore} – {prediction.awayScore}
+                            </div>
+                          )}
+
+                          <Button
+                            size="sm"
+                            className="w-full h-8 text-xs font-bold uppercase tracking-wider"
+                            disabled={!hasDraft || isSaving}
+                            onClick={(e) => { e.stopPropagation(); handleSave(match.id); }}
+                          >
+                            {isSaving ? (
+                              "Guardando…"
+                            ) : prediction && !hasDraft ? (
+                              <><Check className="w-3 h-3 mr-1" />Guardado</>
+                            ) : (
+                              "Guardar"
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
+
+                  </div>
+                </CardContent>
+              </Card>
+            );
           })
         )}
       </div>

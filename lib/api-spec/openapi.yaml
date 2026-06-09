@@ -469,7 +469,9 @@ components:
         matchNumber:
           type: ["integer", "null"]
         myPrediction:
-          $ref: "#/components/schemas/Prediction"
+          oneOf:
+            - $ref: "#/components/schemas/Prediction"
+            - type: "null"
         predictionStats:
           $ref: "#/components/schemas/PredictionStats"
 
