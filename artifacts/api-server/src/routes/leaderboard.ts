@@ -1,8 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, predictionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
 import { GetLeaderboardResponse, GetMyRankResponse } from "@workspace/api-zod";
-import { requireAuth, getOrCreateUser } from "../lib/auth";
+import { requireAuth, getUserById } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -41,10 +40,14 @@ router.get("/leaderboard", async (_req, res): Promise<void> => {
 });
 
 router.get("/leaderboard/me", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
-  const user = await getOrCreateUser(clerkId);
+  const userId = (req as any).userId as number;
+  const user = await getUserById(userId);
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
   const board = await buildLeaderboard();
-  const entry = board.find((e) => e.userId === user.id);
+  const entry = board.find((e) => e.userId === userId);
 
   if (!entry) {
     res.json(GetMyRankResponse.parse({

@@ -274,13 +274,30 @@ export const GetMyRankResponse = zod.object({
 
 
 /**
+ * @summary Create a new user profile (first-time setup)
+ */
+export const CreateUserBody = zod.object({
+  "name": zod.string(),
+  "email": zod.string().optional()
+})
+
+export const CreateUserResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.enum(['user', 'admin']),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Get or create the current user profile
  */
 export const GetMeResponse = zod.object({
   "id": zod.number(),
-  "clerkId": zod.string(),
   "name": zod.string(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "role": zod.enum(['user', 'admin']),
   "createdAt": zod.string()
@@ -481,9 +498,8 @@ export const SetMatchResultResponse = zod.object({
  */
 export const ListUsersResponseItem = zod.object({
   "id": zod.number(),
-  "clerkId": zod.string(),
   "name": zod.string(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "role": zod.enum(['user', 'admin']),
   "createdAt": zod.string()
@@ -504,9 +520,8 @@ export const UpdateUserRoleBody = zod.object({
 
 export const UpdateUserRoleResponse = zod.object({
   "id": zod.number(),
-  "clerkId": zod.string(),
   "name": zod.string(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "role": zod.enum(['user', 'admin']),
   "createdAt": zod.string()

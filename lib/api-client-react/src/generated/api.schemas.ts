@@ -122,13 +122,18 @@ export const UserRole = {
 
 export interface User {
   id: number;
-  clerkId: string;
   name: string;
-  email: string;
+  /** @nullable */
+  email?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
   role: UserRole;
   createdAt: string;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email?: string;
 }
 
 export interface UserStats {

@@ -21,6 +21,7 @@ import type {
 
 import type {
   BracketRound,
+  CreateUserInput,
   Dashboard,
   GroupStandings,
   HealthStatus,
@@ -896,6 +897,34 @@ export function useGetMyRank<TData = Awaited<ReturnType<typeof getMyRank>>, TErr
 
 
 
+
+export const getCreateUserUrl = () => {
+  return `/api/users`
+}
+
+/**
+ * @summary Create a new user profile (first-time setup)
+ */
+export const createUser = async (createUserInput: BodyType<CreateUserInput>, options?: RequestInit): Promise<User> => {
+  return customFetch<User>(getCreateUserUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createUserInput),
+  });
+}
+
+export const useCreateUser = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError, {data: BodyType<CreateUserInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationResult<Awaited<ReturnType<typeof createUser>>, TError, {data: BodyType<CreateUserInput>}, TContext> => {
+  const mutationOptions = options?.mutation;
+  const requestOptions = options?.request;
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUser>>, {data: BodyType<CreateUserInput>}> = (props) => {
+    const {data} = props ?? {};
+    return createUser(data, requestOptions)
+  }
+  return useMutation<Awaited<ReturnType<typeof createUser>>, TError, {data: BodyType<CreateUserInput>}, TContext>({mutationFn, ...mutationOptions});
+}
 
 export const getGetMeUrl = () => {
 

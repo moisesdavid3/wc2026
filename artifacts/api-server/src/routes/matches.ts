@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, matchesTable, teamsTable, predictionsTable, usersTable } from "@workspace/db";
+import { db, matchesTable, teamsTable, predictionsTable } from "@workspace/db";
 import { eq, and, asc } from "drizzle-orm";
 import {
   ListMatchesQueryParams,
@@ -10,7 +10,7 @@ import {
   GetBracketResponse,
   ListGroupsResponse,
 } from "@workspace/api-zod";
-import { getAuth } from "@clerk/express";
+import { getUserId } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -77,23 +77,20 @@ router.get("/matches/:id", async (req, res): Promise<void> => {
 
   const enriched = await enrichMatch(match);
 
-  // Get user prediction if authenticated
+  // Get user prediction if X-User-Id provided
   let myPrediction = null;
-  const auth = getAuth(req);
-  if (auth?.userId) {
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.clerkId, auth.userId));
-    if (user) {
-      const [pred] = await db
-        .select()
-        .from(predictionsTable)
-        .where(and(eq(predictionsTable.userId, user.id), eq(predictionsTable.matchId, params.data.id)));
-      if (pred) {
-        myPrediction = {
-          ...pred,
-          createdAt: pred.createdAt.toISOString(),
-          updatedAt: pred.updatedAt.toISOString(),
-        };
-      }
+  const userId = getUserId(req);
+  if (userId) {
+    const [pred] = await db
+      .select()
+      .from(predictionsTable)
+      .where(and(eq(predictionsTable.userId, userId), eq(predictionsTable.matchId, params.data.id)));
+    if (pred) {
+      myPrediction = {
+        ...pred,
+        createdAt: pred.createdAt.toISOString(),
+        updatedAt: pred.updatedAt.toISOString(),
+      };
     }
   }
 

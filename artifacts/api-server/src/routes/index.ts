@@ -6,10 +6,12 @@ import predictionsRouter from "./predictions";
 import leaderboardRouter from "./leaderboard";
 import usersRouter from "./users";
 import adminRouter from "./admin";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
 router.use(teamsRouter);
 router.use(matchesRouter);
 router.use(predictionsRouter);

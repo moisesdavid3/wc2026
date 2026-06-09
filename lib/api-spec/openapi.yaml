@@ -226,6 +226,25 @@ paths:
                 $ref: "#/components/schemas/LeaderboardEntry"
 
   # ── Users / Profile ──────────────────────────────────────────────────────────
+  /users:
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user profile (first-time setup)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserInput"
+      responses:
+        "200":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
   /users/me:
     get:
       operationId: getMe
@@ -524,22 +543,29 @@ components:
 
     User:
       type: object
-      required: [id, clerkId, name, email, role, createdAt]
+      required: [id, name, role, createdAt]
       properties:
         id:
           type: integer
-        clerkId:
-          type: string
         name:
           type: string
         email:
-          type: string
+          type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
         role:
           type: string
           enum: [user, admin]
         createdAt:
+          type: string
+
+    CreateUserInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        email:
           type: string
 
     UserStats:

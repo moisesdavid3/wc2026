@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function Home() {
   const { data: leaderboard, isLoading } = useGetLeaderboard();
   
-  const topPlayers = leaderboard?.slice(0, 5) || [];
+  const topPlayers = Array.isArray(leaderboard) ? leaderboard.slice(0, 5) : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-background flex flex-col">
@@ -18,10 +18,7 @@ export function Home() {
           <span className="font-bold text-xl tracking-tight uppercase">Predictor 26</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/sign-in">
-            <Button variant="ghost" className="font-medium" data-testid="button-signin-nav">Sign In</Button>
-          </Link>
-          <Link href="/sign-up">
+          <Link href="/login">
             <Button className="font-bold uppercase tracking-wider" data-testid="button-signup-nav">Join Now</Button>
           </Link>
         </div>
@@ -48,15 +45,10 @@ export function Home() {
             </p>
             
             <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/sign-up">
+              <Link href="/login">
                 <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-signup-hero">
                   Start Predicting
                   <ChevronRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/sign-in">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg font-bold uppercase tracking-widest" data-testid="button-signin-hero">
-                  I Already Have An Account
                 </Button>
               </Link>
             </div>

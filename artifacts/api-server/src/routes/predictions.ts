@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, matchesTable, predictionsTable, usersTable } from "@workspace/db";
+import { db, matchesTable, predictionsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   UpsertPredictionBody,
@@ -8,18 +8,17 @@ import {
   GetMyPredictionResponse,
   UpsertPredictionResponse,
 } from "@workspace/api-zod";
-import { requireAuth, getOrCreateUser } from "../lib/auth";
+import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 
 router.get("/predictions", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
-  const user = await getOrCreateUser(clerkId);
+  const userId = (req as any).userId as number;
 
   const predictions = await db
     .select()
     .from(predictionsTable)
-    .where(eq(predictionsTable.userId, user.id));
+    .where(eq(predictionsTable.userId, userId));
 
   const serialized = predictions.map((p) => ({
     ...p,
@@ -30,7 +29,7 @@ router.get("/predictions", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
+  const userId = (req as any).userId as number;
   const parsed = UpsertPredictionBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -39,7 +38,6 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
 
   const { matchId, homeScore, awayScore } = parsed.data;
 
-  // Check match exists and is not started
   const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, matchId));
   if (!match) {
     res.status(400).json({ error: "Match not found" });
@@ -54,13 +52,10 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const user = await getOrCreateUser(clerkId);
-
-  // Upsert prediction
   const [existing] = await db
     .select()
     .from(predictionsTable)
-    .where(and(eq(predictionsTable.userId, user.id), eq(predictionsTable.matchId, matchId)));
+    .where(and(eq(predictionsTable.userId, userId), eq(predictionsTable.matchId, matchId)));
 
   let prediction;
   if (existing) {
@@ -73,7 +68,7 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
   } else {
     const [created] = await db
       .insert(predictionsTable)
-      .values({ userId: user.id, matchId, homeScore, awayScore })
+      .values({ userId, matchId, homeScore, awayScore })
       .returning();
     prediction = created;
   }
@@ -87,18 +82,17 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.get("/predictions/:matchId", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
+  const userId = (req as any).userId as number;
   const params = GetMyPredictionParams.safeParse({ matchId: req.params.matchId });
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const user = await getOrCreateUser(clerkId);
   const [prediction] = await db
     .select()
     .from(predictionsTable)
-    .where(and(eq(predictionsTable.userId, user.id), eq(predictionsTable.matchId, params.data.matchId)));
+    .where(and(eq(predictionsTable.userId, userId), eq(predictionsTable.matchId, params.data.matchId)));
 
   if (!prediction) {
     res.status(404).json({ error: "Prediction not found" });

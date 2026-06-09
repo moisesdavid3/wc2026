@@ -1,22 +1,23 @@
 import { Link, useLocation } from "wouter";
-import { useClerk, useUser } from "@clerk/react";
-import { Trophy, Home, CalendarDays, LayoutList, Trophy as TrophyIcon, User as UserIcon, LogOut, ShieldAlert } from "lucide-react";
+import { useUserContext } from "@/contexts/user";
+import { useGetMe } from "@workspace/api-client-react";
+import { Trophy, Home, CalendarDays, LayoutList, User as UserIcon, LogOut, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  const { clearUserId } = useUserContext();
+  const { data: user } = useGetMe();
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const isAdmin = user?.publicMetadata?.role === "admin" || false; // Or checking however we get role. The prompt says useUser() and check user.role but Clerk user doesn't have role directly on user object unless from publicMetadata. The app uses `useGetMe` or something? Wait, `useGetMe` returns User with role. Let's just use useUser() for now and we can check API later or assume admin is in publicMetadata. Let's just use `useUser` and API hook if needed.
+  const isAdmin = user?.role === "admin";
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/matches", label: "Matches", icon: CalendarDays },
     { href: "/groups", label: "Groups", icon: LayoutList },
     { href: "/bracket", label: "Bracket", icon: Trophy },
-    { href: "/leaderboard", label: "Leaderboard", icon: TrophyIcon },
+    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/profile", label: "Profile", icon: UserIcon },
   ];
 
@@ -48,16 +49,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
-          
-          {/* Admin link if needed */}
-          <Link href="/admin" className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${location === '/admin' ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`} data-testid="link-admin">
-            <ShieldAlert className="w-5 h-5" />
-            Admin
-          </Link>
+
+          {isAdmin && (
+            <Link href="/admin" className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors ${location === '/admin' ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`} data-testid="link-admin">
+              <ShieldAlert className="w-5 h-5" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="p-4 border-t border-border">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={() => signOut({ redirectUrl: basePath || "/" })} data-testid="button-logout">
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={() => clearUserId()} data-testid="button-logout">
             <LogOut className="w-5 h-5 mr-3" />
             Sign Out
           </Button>

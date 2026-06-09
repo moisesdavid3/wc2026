@@ -1,46 +1,49 @@
 import { Router, type IRouter } from "express";
 import { db, usersTable, predictionsTable, matchesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { GetMeResponse, GetMyStatsResponse, GetDashboardResponse } from "@workspace/api-zod";
-import { requireAuth, getOrCreateUser } from "../lib/auth";
-import { getAuth } from "@clerk/express";
+import { GetMeResponse, GetMyStatsResponse, GetDashboardResponse, CreateUserBody, CreateUserResponse } from "@workspace/api-zod";
+import { requireAuth, getUserById } from "../lib/auth";
 
 const router: IRouter = Router();
 
+router.post("/users", async (req, res): Promise<void> => {
+  const parsed = CreateUserBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [user] = await db
+    .insert(usersTable)
+    .values({ name: parsed.data.name, email: parsed.data.email ?? null })
+    .returning();
+
+  res.json(CreateUserResponse.parse({ ...user, createdAt: user.createdAt.toISOString() }));
+});
+
 router.get("/users/me", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
-
-  // Try to get name/email from Clerk auth metadata
-  const auth = getAuth(req);
-  const sessionClaims = auth?.sessionClaims as any;
-  const name = sessionClaims?.firstName
-    ? `${sessionClaims.firstName} ${sessionClaims.lastName ?? ""}`.trim()
-    : (sessionClaims?.name ?? "User");
-  const email = sessionClaims?.email ?? (sessionClaims?.emailAddresses?.[0]?.emailAddress ?? "");
-
-  const user = await getOrCreateUser(clerkId, { name, email });
-  const serialized = {
-    ...user,
-    createdAt: user.createdAt.toISOString(),
-  };
-  res.json(GetMeResponse.parse(serialized));
+  const userId = (req as any).userId as number;
+  const user = await getUserById(userId);
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  res.json(GetMeResponse.parse({ ...user, createdAt: user.createdAt.toISOString() }));
 });
 
 router.get("/users/me/stats", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
-  const user = await getOrCreateUser(clerkId);
+  const userId = (req as any).userId as number;
 
   const userPreds = await db
     .select()
     .from(predictionsTable)
-    .where(eq(predictionsTable.userId, user.id));
+    .where(eq(predictionsTable.userId, userId));
 
   const scored = userPreds.filter((p) => p.points != null);
   const totalPoints = scored.reduce((s, p) => s + (p.points ?? 0), 0);
   const exactPredictions = scored.filter((p) => p.points === 5).length;
   const correctOutcomes = scored.filter((p) => (p.points ?? 0) >= 3).length;
 
-  // Get rank
   const allUsers = await db.select().from(usersTable);
   const allPreds = await db.select().from(predictionsTable);
 
@@ -55,7 +58,7 @@ router.get("/users/me/stats", requireAuth, async (req, res): Promise<void> => {
     })
     .sort((a, b) => b.totalPoints - a.totalPoints || b.exactPredictions - a.exactPredictions);
 
-  const rank = ranked.findIndex((r) => r.userId === user.id) + 1;
+  const rank = ranked.findIndex((r) => r.userId === userId) + 1;
 
   res.json(GetMyStatsResponse.parse({
     totalPoints,
@@ -67,17 +70,14 @@ router.get("/users/me/stats", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
-  const clerkId = (req as any).clerkId as string;
-  const user = await getOrCreateUser(clerkId);
+  const userId = (req as any).userId as number;
 
-  // My stats
-  const userPreds = await db.select().from(predictionsTable).where(eq(predictionsTable.userId, user.id));
+  const userPreds = await db.select().from(predictionsTable).where(eq(predictionsTable.userId, userId));
   const scored = userPreds.filter((p) => p.points != null);
   const totalPoints = scored.reduce((s, p) => s + (p.points ?? 0), 0);
   const exactPredictions = scored.filter((p) => p.points === 5).length;
   const correctOutcomes = scored.filter((p) => (p.points ?? 0) >= 3).length;
 
-  // Rank
   const allUsers = await db.select().from(usersTable);
   const allPreds = await db.select().from(predictionsTable);
   const ranked = allUsers
@@ -86,7 +86,7 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
       totalPoints: allPreds.filter((p) => p.userId === u.id && p.points != null).reduce((s, p) => s + (p.points ?? 0), 0),
     }))
     .sort((a, b) => b.totalPoints - a.totalPoints);
-  const rank = ranked.findIndex((r) => r.userId === user.id) + 1;
+  const rank = ranked.findIndex((r) => r.userId === userId) + 1;
 
   const myStats = {
     totalPoints,
@@ -96,7 +96,6 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
     rank: rank || 1,
   };
 
-  // Upcoming matches
   const now = new Date();
   const allMatches = await db.select().from(matchesTable);
   const upcoming = allMatches
@@ -105,7 +104,6 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
     .slice(0, 5)
     .map((m) => ({ ...m, matchDate: m.matchDate.toISOString() }));
 
-  // Leaderboard preview (top 5)
   const leaderboardPreview = ranked.slice(0, 5).map((r, i) => {
     const u = allUsers.find((x) => x.id === r.userId);
     const preds = allPreds.filter((p) => p.userId === r.userId && p.points != null);
@@ -121,14 +119,11 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
     };
   });
 
-  // Tournament progress
   const finished = allMatches.filter((m) => m.status === "finished").length;
   const nextMatch = allMatches
     .filter((m) => m.status === "upcoming" && m.matchDate > now)
     .sort((a, b) => a.matchDate.getTime() - b.matchDate.getTime())[0];
 
-  // Determine current round
-  const rounds = ["Group Stage", "Round of 32", "Round of 16", "Quarterfinals", "Semifinals", "Third Place", "Final"];
   const liveOrUpcoming = allMatches.filter((m) => m.status !== "finished");
   const currentRound = liveOrUpcoming.length > 0 ? liveOrUpcoming[0].round : "Final";
 
@@ -139,12 +134,7 @@ router.get("/dashboard", requireAuth, async (req, res): Promise<void> => {
     nextMatchDate: nextMatch?.matchDate?.toISOString() ?? null,
   };
 
-  res.json(GetDashboardResponse.parse({
-    myStats,
-    upcomingMatches: upcoming,
-    leaderboardPreview,
-    tournamentProgress,
-  }));
+  res.json(GetDashboardResponse.parse({ myStats, upcomingMatches: upcoming, leaderboardPreview, tournamentProgress }));
 });
 
 export default router;
