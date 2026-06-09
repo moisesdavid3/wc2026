@@ -1,10 +1,10 @@
-# [Project name]
+# World Cup 2026 Predictor Pool
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A prediction pool app for FIFA World Cup 2026 — users predict match scores, earn points, and compete on a live leaderboard.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -14,31 +14,51 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- API: Express 5 (port 8080, path `/api`)
+- Frontend: React + Vite (port 24323, path `/`)
 - DB: PostgreSQL + Drizzle ORM
+- Auth: Clerk (via `@clerk/express` + `@clerk/react`)
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — source of truth for all API contracts
+- `lib/db/src/schema/` — Drizzle ORM schema (teams, matches, predictions, users)
+- `lib/api-client-react/src/generated/` — generated React Query hooks
+- `lib/api-zod/src/generated/` — generated Zod validators
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/predictor/src/pages/` — all frontend pages
+- `scripts/src/seed.ts` — DB seed script (teams + fixtures)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first: OpenAPI spec → Zod validators + React Query hooks via Orval. Never hand-write API types.
+- Scoring: 5 pts exact score, 3 pts correct outcome (win/draw/loss), 0 pts wrong. Calculated server-side on result entry.
+- Predictions locked once match date passes (checked server-side).
+- Admin role stored in `users.role` column; admins can enter results and manage roles.
+- Clerk auth: `publishableKeyFromHost` for dev/prod key switching, proxy URL via `VITE_CLERK_PROXY_URL`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- **Home**: landing page with hero + leaderboard preview (public)
+- **Dashboard**: personal stats, countdown to next matches, leaderboard preview (auth required)
+- **Matches**: full fixture list with prediction status + filters (auth required)
+- **Match Detail**: submit/edit score prediction, see community prediction stats (auth required)
+- **Leaderboard**: full ranked standings with podium (auth required)
+- **Groups**: group stage standings table with live GD/points (auth required)
+- **Bracket**: knockout stage visual bracket (auth required)
+- **Profile**: personal history + prediction breakdown (auth required)
+- **Admin**: enter official results, manage user roles (admin only)
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run `pnpm --filter @workspace/api-spec run codegen` after any OpenAPI spec change.
+- Run `pnpm --filter @workspace/db run push` after any schema change.
+- `db.userId` column name in DB is `user_id`; Drizzle maps it as `userId`.
+- The API server uses `req.log` (pino) — never `console.log` in route files.
+- `@workspace/api-zod` exports both response and param schemas used for server-side validation.
 
 ## Pointers
 

@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: World Cup 2026 Predictor Pool API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: teams
+    description: Team operations
+  - name: matches
+    description: Match operations
+  - name: predictions
+    description: Prediction operations
+  - name: leaderboard
+    description: Leaderboard operations
+  - name: users
+    description: User operations
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,638 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Teams ───────────────────────────────────────────────────────────────────
+  /teams:
+    get:
+      operationId: listTeams
+      tags: [teams]
+      summary: List all teams
+      responses:
+        "200":
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Team"
+
+  /teams/{id}:
+    get:
+      operationId: getTeam
+      tags: [teams]
+      summary: Get a team by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "404":
+          description: Not found
+
+  # ── Matches ─────────────────────────────────────────────────────────────────
+  /matches:
+    get:
+      operationId: listMatches
+      tags: [matches]
+      summary: List all matches with optional filters
+      parameters:
+        - name: round
+          in: query
+          schema:
+            type: string
+        - name: group
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [upcoming, live, finished]
+      responses:
+        "200":
+          description: List of matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+
+  /matches/{id}:
+    get:
+      operationId: getMatch
+      tags: [matches]
+      summary: Get match details with predictions summary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchDetail"
+        "404":
+          description: Not found
+
+  /matches/upcoming:
+    get:
+      operationId: listUpcomingMatches
+      tags: [matches]
+      summary: List upcoming matches with countdown info
+      responses:
+        "200":
+          description: Upcoming matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+
+  # ── Predictions ──────────────────────────────────────────────────────────────
+  /predictions:
+    get:
+      operationId: listMyPredictions
+      tags: [predictions]
+      summary: List the current user's predictions
+      responses:
+        "200":
+          description: User predictions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prediction"
+    post:
+      operationId: upsertPrediction
+      tags: [predictions]
+      summary: Create or update a prediction (locked after kickoff)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictionInput"
+      responses:
+        "200":
+          description: Saved prediction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prediction"
+        "400":
+          description: Bad request (match locked or invalid)
+
+  /predictions/{matchId}:
+    get:
+      operationId: getMyPrediction
+      tags: [predictions]
+      summary: Get the current user's prediction for a specific match
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Prediction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prediction"
+        "404":
+          description: Not found
+
+  # ── Leaderboard ──────────────────────────────────────────────────────────────
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [leaderboard]
+      summary: Get the full leaderboard ranked by points
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /leaderboard/me:
+    get:
+      operationId: getMyRank
+      tags: [leaderboard]
+      summary: Get the current user's leaderboard position and stats
+      responses:
+        "200":
+          description: My ranking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardEntry"
+
+  # ── Users / Profile ──────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get or create the current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/me/stats:
+    get:
+      operationId: getMyStats
+      tags: [users]
+      summary: Get prediction statistics for current user
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  # ── Dashboard summary (wow endpoint) ─────────────────────────────────────────
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [users]
+      summary: Get dashboard overview - stats, upcoming matches, leaderboard preview
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+
+  # ── Bracket ──────────────────────────────────────────────────────────────────
+  /bracket:
+    get:
+      operationId: getBracket
+      tags: [matches]
+      summary: Get the tournament knockout bracket
+      responses:
+        "200":
+          description: Bracket rounds with matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BracketRound"
+
+  /groups:
+    get:
+      operationId: listGroups
+      tags: [matches]
+      summary: Get all groups with standings
+      responses:
+        "200":
+          description: Groups with standings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupStandings"
+
+  # ── Admin ────────────────────────────────────────────────────────────────────
+  /admin/matches/{id}/result:
+    post:
+      operationId: setMatchResult
+      tags: [admin]
+      summary: Admin - set official result for a match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MatchResultInput"
+      responses:
+        "200":
+          description: Updated match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+        "403":
+          description: Forbidden
+
+  /admin/users:
+    get:
+      operationId: listUsers
+      tags: [admin]
+      summary: Admin - list all users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/users/{id}/role:
+    patch:
+      operationId: updateUserRole
+      tags: [admin]
+      summary: Admin - update user role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Team:
+      type: object
+      required: [id, name, code, flag, confederation]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: string
+        flag:
+          type: string
+        confederation:
+          type: string
+        group:
+          type: ["string", "null"]
+
+    Match:
+      type: object
+      required: [id, matchDate, stadium, city, round, status]
+      properties:
+        id:
+          type: integer
+        homeTeamId:
+          type: ["integer", "null"]
+        awayTeamId:
+          type: ["integer", "null"]
+        homeTeam:
+          oneOf:
+            - $ref: "#/components/schemas/Team"
+            - type: "null"
+        awayTeam:
+          oneOf:
+            - $ref: "#/components/schemas/Team"
+            - type: "null"
+        matchDate:
+          type: string
+        stadium:
+          type: string
+        city:
+          type: string
+        round:
+          type: string
+        group:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [upcoming, live, finished]
+        homeScore:
+          type: ["integer", "null"]
+        awayScore:
+          type: ["integer", "null"]
+        matchNumber:
+          type: ["integer", "null"]
+
+    MatchDetail:
+      type: object
+      required: [id, matchDate, stadium, city, round, status, predictionStats]
+      properties:
+        id:
+          type: integer
+        homeTeamId:
+          type: ["integer", "null"]
+        awayTeamId:
+          type: ["integer", "null"]
+        homeTeam:
+          oneOf:
+            - $ref: "#/components/schemas/Team"
+            - type: "null"
+        awayTeam:
+          oneOf:
+            - $ref: "#/components/schemas/Team"
+            - type: "null"
+        matchDate:
+          type: string
+        stadium:
+          type: string
+        city:
+          type: string
+        round:
+          type: string
+        group:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [upcoming, live, finished]
+        homeScore:
+          type: ["integer", "null"]
+        awayScore:
+          type: ["integer", "null"]
+        matchNumber:
+          type: ["integer", "null"]
+        myPrediction:
+          $ref: "#/components/schemas/Prediction"
+        predictionStats:
+          $ref: "#/components/schemas/PredictionStats"
+
+    PredictionStats:
+      type: object
+      required: [totalPredictions, homeWinPct, drawPct, awayWinPct]
+      properties:
+        totalPredictions:
+          type: integer
+        homeWinPct:
+          type: number
+        drawPct:
+          type: number
+        awayWinPct:
+          type: number
+
+    Prediction:
+      type: object
+      required: [id, userId, matchId, homeScore, awayScore, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        matchId:
+          type: integer
+        homeScore:
+          type: integer
+        awayScore:
+          type: integer
+        points:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    PredictionInput:
+      type: object
+      required: [matchId, homeScore, awayScore]
+      properties:
+        matchId:
+          type: integer
+        homeScore:
+          type: integer
+          minimum: 0
+        awayScore:
+          type: integer
+          minimum: 0
+
+    User:
+      type: object
+      required: [id, clerkId, name, email, role, createdAt]
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, admin]
+        createdAt:
+          type: string
+
+    UserStats:
+      type: object
+      required: [totalPoints, exactPredictions, correctOutcomes, totalPredictions, rank]
+      properties:
+        totalPoints:
+          type: integer
+        exactPredictions:
+          type: integer
+        correctOutcomes:
+          type: integer
+        totalPredictions:
+          type: integer
+        rank:
+          type: integer
+
+    UserRoleUpdate:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [user, admin]
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, userId, name, totalPoints, exactPredictions, correctOutcomes, totalPredictions]
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        totalPoints:
+          type: integer
+        exactPredictions:
+          type: integer
+        correctOutcomes:
+          type: integer
+        totalPredictions:
+          type: integer
+
+    Dashboard:
+      type: object
+      required: [myStats, upcomingMatches, leaderboardPreview, tournamentProgress]
+      properties:
+        myStats:
+          $ref: "#/components/schemas/UserStats"
+        upcomingMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Match"
+        leaderboardPreview:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+        tournamentProgress:
+          $ref: "#/components/schemas/TournamentProgress"
+
+    TournamentProgress:
+      type: object
+      required: [totalMatches, finishedMatches, currentRound]
+      properties:
+        totalMatches:
+          type: integer
+        finishedMatches:
+          type: integer
+        currentRound:
+          type: string
+        nextMatchDate:
+          type: ["string", "null"]
+
+    BracketRound:
+      type: object
+      required: [round, matches]
+      properties:
+        round:
+          type: string
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Match"
+
+    GroupStandings:
+      type: object
+      required: [group, standings]
+      properties:
+        group:
+          type: string
+        standings:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupTeamStanding"
+
+    GroupTeamStanding:
+      type: object
+      required: [teamId, team, played, won, drawn, lost, goalsFor, goalsAgainst, goalDifference, points]
+      properties:
+        teamId:
+          type: integer
+        team:
+          $ref: "#/components/schemas/Team"
+        played:
+          type: integer
+        won:
+          type: integer
+        drawn:
+          type: integer
+        lost:
+          type: integer
+        goalsFor:
+          type: integer
+        goalsAgainst:
+          type: integer
+        goalDifference:
+          type: integer
+        points:
+          type: integer
+
+    MatchResultInput:
+      type: object
+      required: [homeScore, awayScore]
+      properties:
+        homeScore:
+          type: integer
+          minimum: 0
+        awayScore:
+          type: integer
+          minimum: 0

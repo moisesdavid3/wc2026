@@ -1,0 +1,3 @@
+- [Match schema nullable teams](match-nullable-teams.md) — knockout placeholder matches have null homeTeamId/awayTeamId; OpenAPI spec must mark these nullable or Zod parse blows up.
+- [DB lib stale declarations](db-lib-stale.md) — after any schema change, run `pnpm run typecheck:libs` before checking api-server; otherwise TS sees missing exports that actually exist.
+- [Codegen workflow](codegen-workflow.md) — after OpenAPI spec changes: codegen → typecheck:libs → restart api-server. Order matters.

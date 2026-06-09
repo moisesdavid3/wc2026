@@ -1,0 +1,432 @@
+# Build a FIFA World Cup 2026 Prediction Pool Application
+
+Create a modern, responsive full-stack web application called **World Cup 2026 Predictor Pool**.
+
+## Objective
+
+The application allows multiple users to predict the results of all FIFA World Cup 2026 matches and compete against friends.
+
+Users should be able to:
+
+* Register and log in
+* Predict match results
+* Save predictions
+* View standings
+* Compare predictions with actual results
+* Earn points based on prediction accuracy
+* See who wins the pool
+
+The application should be attractive, mobile-friendly, and easy to use.
+
+---
+
+# Technology Stack
+
+Use:
+
+* Next.js (latest version)
+* TypeScript
+* Tailwind CSS
+* shadcn/ui components
+* Prisma ORM
+* PostgreSQL database
+* NextAuth authentication
+* Recharts for charts and statistics
+
+Deploy-ready for Replit.
+
+---
+
+# Core Data
+
+The system must include:
+
+## Teams
+
+Store:
+
+* Team name
+* FIFA code
+* Country flag
+* Confederation
+
+Example:
+
+* Argentina 🇦🇷
+* Brazil 🇧🇷
+* Spain 🇪🇸
+* France 🇫🇷
+
+---
+
+## Tournament Structure
+
+Support the full FIFA World Cup 2026 format:
+
+### Group Stage
+
+* All groups
+* Teams assigned to groups
+* Match schedule
+* Stadium
+* City
+* Date and time
+
+### Knockout Rounds
+
+Automatically generated based on qualification:
+
+* Round of 32
+* Round of 16
+* Quarterfinals
+* Semifinals
+* Third Place Match
+* Final
+
+---
+
+# Automatic Tournament Logic
+
+The system should automatically:
+
+1. Calculate group standings
+2. Determine qualified teams
+3. Generate knockout bracket
+4. Advance winners to next rounds
+5. Lock future rounds until previous rounds are completed
+
+Example:
+
+When all group-stage matches have official results:
+
+* Generate Round of 32 automatically
+
+When Round of 32 is completed:
+
+* Generate Round of 16 automatically
+
+And so on until the Final.
+
+---
+
+# Match Data
+
+Create a service layer that can:
+
+* Import official FIFA World Cup 2026 schedule
+* Store:
+
+  * Match date
+  * Stadium
+  * City
+  * Home team
+  * Away team
+  * Group or round
+
+Design the system so that schedules can be imported from JSON or API later.
+
+For now, seed the database with all available World Cup 2026 fixtures.
+
+---
+
+# Users
+
+Create user accounts.
+
+Fields:
+
+* id
+* name
+* email
+* password
+* createdAt
+
+Roles:
+
+### Admin
+
+Can:
+
+* Enter official match results
+* Manage users
+* Update tournament data
+
+### User
+
+Can:
+
+* Enter predictions
+* Edit predictions before deadline
+* View standings
+
+---
+
+# Prediction System
+
+Each user predicts:
+
+* Home score
+* Away score
+
+Example:
+
+Argentina 2 - 1 Spain
+
+Store every prediction.
+
+Predictions can be modified only until match kickoff.
+
+After kickoff:
+
+* Prediction becomes locked.
+
+---
+
+# Scoring Rules
+
+Implement:
+
+### Exact score
+
+5 points
+
+Example:
+
+Prediction:
+Argentina 2-1 Spain
+
+Actual:
+Argentina 2-1 Spain
+
+---
+
+### Correct winner + wrong score
+
+3 points
+
+Example:
+
+Prediction:
+Argentina 1-0 Spain
+
+Actual:
+Argentina 2-1 Spain
+
+---
+
+### Correct draw
+
+3 points
+
+Example:
+
+Prediction:
+1-1
+
+Actual:
+0-0
+
+---
+
+### Wrong result
+
+0 points
+
+---
+
+# Standings
+
+Create a leaderboard showing:
+
+* Rank
+* User
+* Total points
+* Exact scores hit
+* Correct outcomes
+
+Sort by:
+
+1. Total points
+2. Exact scores
+3. Correct outcomes
+
+---
+
+# User Dashboard
+
+Show:
+
+## My Predictions
+
+List of all matches.
+
+Status:
+
+* Pending
+* Locked
+* Finished
+
+---
+
+## My Statistics
+
+Cards showing:
+
+* Total points
+* Exact predictions
+* Correct outcomes
+* Current rank
+
+---
+
+## Knockout Bracket
+
+Interactive bracket view.
+
+Display:
+
+* Teams
+* Flags
+* Matchups
+* Results
+
+---
+
+# Admin Dashboard
+
+Admin can:
+
+## Manage Results
+
+Enter official score.
+
+Example:
+
+Argentina 3 - 1 Spain
+
+System automatically:
+
+* Recalculate standings
+* Update leaderboard
+* Advance teams
+
+---
+
+## Manage Tournament
+
+* Create matches
+* Edit matches
+* Import fixtures
+* Rebuild knockout rounds
+
+---
+
+# UI Design
+
+Create a modern football-themed design.
+
+Style:
+
+* FIFA-inspired
+* Dark mode
+* Light mode
+* Responsive
+
+Pages:
+
+### Landing Page
+
+* Tournament logo
+* Hero section
+* Leaderboard preview
+
+### Login
+
+### Register
+
+### Dashboard
+
+### Leaderboard
+
+### Fixtures
+
+### Match Details
+
+### Admin Panel
+
+Use:
+
+* Cards
+* Team flags
+* Smooth animations
+* Modern gradients
+
+---
+
+# Database Schema
+
+Create Prisma models for:
+
+User
+
+Team
+
+Group
+
+Match
+
+Prediction
+
+OfficialResult
+
+Round
+
+LeaderboardSnapshot
+
+Include relationships and indexes.
+
+---
+
+# Additional Features
+
+Add:
+
+* User profile page
+* Search matches
+* Filter by round
+* Filter by group
+* Match countdown timer
+* Notification banner for upcoming deadlines
+
+---
+
+# Future-Proofing
+
+Design the architecture so future versions can include:
+
+* Multiple tournaments
+* Copa América
+* Euro Cup
+* Champions League
+* Private pools
+* Invite links
+* Real FIFA API integration
+
+---
+
+# Deliverables
+
+Generate:
+
+1. Complete database schema
+2. Backend API routes
+3. Authentication
+4. Seed scripts
+5. Tournament engine
+6. Standings engine
+7. Responsive UI
+8. Replit deployment configuration
+9. Sample data
+10. Clear setup instructions
+
+Use clean architecture, TypeScript best practices, reusable components, and production-quality code.
