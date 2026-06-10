@@ -31,7 +31,7 @@ function formatCOT(utcString: string) {
 
 export function Matches() {
   const [filterPrediction, setFilterPrediction] = useState<string>("unpredicted");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("upcoming");
   const [filterGroup, setFilterGroup] = useState<string>("all");
   const [scores, setScores] = useState<Record<number, { home: string; away: string }>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
@@ -114,7 +114,7 @@ export function Matches() {
               <SelectValue placeholder="Predicción" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="unpredicted">Sin pronosticar</SelectItem>
               <SelectItem value="predicted">Pronosticados</SelectItem>
             </SelectContent>
