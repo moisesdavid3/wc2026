@@ -154,26 +154,26 @@ export function Matches() {
                   <div className="flex flex-col lg:flex-row">
 
                     {/* ── Info panel ── */}
-                    <div className="lg:w-56 p-4 border-b lg:border-b-0 lg:border-r border-border bg-muted/10 flex flex-col justify-center gap-2">
-                      <div className="text-sm font-black uppercase tracking-widest text-primary">
+                    <div className="lg:w-56 px-3 py-2 lg:p-4 border-b lg:border-b-0 lg:border-r border-border bg-muted/10 flex flex-col justify-center gap-1.5 lg:gap-2">
+                      <div className="text-xs lg:text-sm font-black uppercase tracking-widest text-primary">
                         {match.group ? `Grupo ${match.group}` : match.round}
                       </div>
 
                       {/* Colombia time */}
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="flex items-center gap-1.5 lg:gap-2">
+                        <Clock className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-muted-foreground shrink-0" />
                         <div>
-                          <div className="text-sm font-semibold text-foreground leading-tight">{cot.date}</div>
-                          <div className="text-sm text-primary font-mono font-bold">{cot.time}</div>
+                          <div className="text-xs lg:text-sm font-semibold text-foreground leading-tight">{cot.date}</div>
+                          <div className="text-xs lg:text-sm text-primary font-mono font-bold">{cot.time}</div>
                         </div>
                       </div>
 
                       {/* Stadium */}
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-1.5 lg:gap-2">
+                        <MapPin className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-muted-foreground shrink-0 mt-0.5" />
                         <div>
-                          <div className="text-sm text-foreground/80 leading-tight">{match.stadium}</div>
-                          <div className="text-sm text-muted-foreground">{match.city}</div>
+                          <div className="text-xs lg:text-sm text-foreground/80 leading-tight">{match.stadium}</div>
+                          <div className="text-xs lg:text-sm text-muted-foreground">{match.city}</div>
                         </div>
                       </div>
 
@@ -189,35 +189,35 @@ export function Matches() {
                     </div>
 
                     {/* ── Teams & score ── */}
-                    <div className="flex-1 p-4 flex items-center">
-                      <div className="flex items-center justify-between w-full">
+                    <div className="flex-1 px-3 py-2 lg:p-4 flex items-center min-w-0">
+                      <div className="flex items-center justify-between w-full min-w-0 gap-1">
                         {/* Home */}
-                        <div className="flex items-center gap-2 w-[38%] justify-end">
-                          <span className="font-bold text-base sm:text-lg truncate">{match.homeTeam?.name ?? "TBD"}</span>
-                          <span className="text-2xl shrink-0">{match.homeTeam?.flag ?? "🏳️"}</span>
+                        <div className="flex items-center gap-1.5 lg:gap-2 w-[38%] justify-end min-w-0">
+                          <span className="font-bold text-xs lg:text-base truncate">{match.homeTeam?.name ?? "TBD"}</span>
+                          <span className="text-lg lg:text-2xl shrink-0">{match.homeTeam?.flag ?? "🏳️"}</span>
                         </div>
 
                         {/* Score / VS */}
-                        <div className="flex flex-col items-center justify-center px-3 w-[24%] shrink-0">
+                        <div className="flex flex-col items-center justify-center px-1.5 lg:px-3 w-[24%] shrink-0">
                           {isUpcoming ? (
-                            <div className="text-muted-foreground font-mono font-bold text-lg">VS</div>
+                            <div className="text-muted-foreground font-mono font-bold text-sm lg:text-lg">VS</div>
                           ) : (
-                            <div className="text-2xl font-black font-mono text-foreground">
+                            <div className="text-base lg:text-2xl font-black font-mono text-foreground">
                               {match.homeScore} – {match.awayScore}
                             </div>
                           )}
                         </div>
 
                         {/* Away */}
-                        <div className="flex items-center gap-2 w-[38%] justify-start">
-                          <span className="text-2xl shrink-0">{match.awayTeam?.flag ?? "🏳️"}</span>
-                          <span className="font-bold text-base sm:text-lg truncate">{match.awayTeam?.name ?? "TBD"}</span>
+                        <div className="flex items-center gap-1.5 lg:gap-2 w-[38%] justify-start min-w-0">
+                          <span className="text-lg lg:text-2xl shrink-0">{match.awayTeam?.flag ?? "🏳️"}</span>
+                          <span className="font-bold text-xs lg:text-base truncate">{match.awayTeam?.name ?? "TBD"}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* ── Prediction panel ── */}
-                    <div className="lg:w-56 p-4 border-t lg:border-t-0 lg:border-l border-border bg-primary/5 flex flex-col items-center justify-center gap-2">
+                    <div className="lg:w-56 px-3 py-2 lg:p-4 border-t lg:border-t-0 lg:border-l border-border bg-primary/5 flex flex-col items-center justify-center gap-1.5 lg:gap-2">
                       <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         Tu predicción
                       </div>
@@ -227,11 +227,11 @@ export function Matches() {
                         <div className="flex flex-col items-center gap-1.5 text-center">
                           {prediction ? (
                             <>
-                              <div className="text-xl font-mono font-black text-foreground">
+                              <div className="text-base lg:text-xl font-mono font-black text-foreground">
                                 {prediction.homeScore} – {prediction.awayScore}
                               </div>
                               {prediction.points != null && (
-                                <div className={`text-sm font-bold ${prediction.points > 0 ? "text-primary" : "text-muted-foreground"}`}>
+                                <div className={`text-xs lg:text-sm font-bold ${prediction.points > 0 ? "text-primary" : "text-muted-foreground"}`}>
                                   +{prediction.points} pts
                                 </div>
                               )}
@@ -247,8 +247,8 @@ export function Matches() {
                         </div>
                       ) : (
                         /* Upcoming & open — editable inputs */
-                        <div className="w-full space-y-2">
-                          <div className="flex items-center justify-center gap-2">
+                        <div className="w-full space-y-1.5 lg:space-y-2">
+                          <div className="flex items-center justify-center gap-1.5 lg:gap-2">
                             <Input
                               type="number"
                               min="0"
@@ -256,7 +256,7 @@ export function Matches() {
                               placeholder={prediction ? String(prediction.homeScore) : "0"}
                               value={draft?.home ?? ""}
                               onChange={(e) => handleScoreChange(match.id, "home", e.target.value)}
-                              className="w-14 text-center text-xl font-mono font-black h-11 bg-background border-border focus:border-primary p-1"
+                              className="w-11 lg:w-14 text-center text-base lg:text-xl font-mono font-black h-9 lg:h-11 bg-background border-border focus:border-primary p-1"
                             />
                             <span className="font-black text-muted-foreground">–</span>
                             <Input
@@ -266,7 +266,7 @@ export function Matches() {
                               placeholder={prediction ? String(prediction.awayScore) : "0"}
                               value={draft?.away ?? ""}
                               onChange={(e) => handleScoreChange(match.id, "away", e.target.value)}
-                              className="w-14 text-center text-xl font-mono font-black h-11 bg-background border-border focus:border-primary p-1"
+                              className="w-11 lg:w-14 text-center text-base lg:text-xl font-mono font-black h-9 lg:h-11 bg-background border-border focus:border-primary p-1"
                             />
                           </div>
 
@@ -278,7 +278,7 @@ export function Matches() {
 
                           <Button
                             size="sm"
-                            className="w-full h-8 text-xs font-bold uppercase tracking-wider"
+                            className="w-full h-7 lg:h-8 text-xs font-bold uppercase tracking-wider"
                             disabled={!hasDraft || isSaving}
                             onClick={(e) => { e.stopPropagation(); handleSave(match.id); }}
                           >
