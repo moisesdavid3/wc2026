@@ -4,23 +4,27 @@ export function calculatePoints(
   actualHome: number,
   actualAway: number
 ): number {
+  let points = 0;
+
   // Exact score: 5 points
-  if (predHome === actualHome && predAway === actualAway) {
-    return 5;
+  const exact = predHome === actualHome && predAway === actualAway;
+  if (exact) {
+    points += 5;
   }
 
-  const predOutcome = Math.sign(predHome - predAway);
-  const actualOutcome = Math.sign(actualHome - actualAway);
-
-  // Correct draw (both predicted draw): 3 points
-  if (predOutcome === 0 && actualOutcome === 0) {
-    return 3;
+  // Correct outcome: 3 points (only if not already exact)
+  if (!exact) {
+    const predOutcome = Math.sign(predHome - predAway);
+    const actualOutcome = Math.sign(actualHome - actualAway);
+    if (predOutcome === actualOutcome) {
+      points += 3;
+    }
   }
 
-  // Correct winner (non-draw): 3 points
-  if (predOutcome !== 0 && predOutcome === actualOutcome) {
-    return 3;
+  // Goal difference bonus: 1 point if diff matches (any number)
+  if ((predHome - predAway) === (actualHome - actualAway)) {
+    points += 1;
   }
 
-  return 0;
+  return points;
 }
