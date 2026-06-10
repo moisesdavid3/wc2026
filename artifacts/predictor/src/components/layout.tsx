@@ -36,6 +36,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Trophy className="w-6 h-6 text-primary" />
             <span className="font-bold tracking-tight">Predictor 26</span>
           </div>
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => clearUserId()} data-testid="mobile-button-logout">
+            <LogOut className="w-5 h-5" />
+          </Button>
         </div>
       </header>
 
@@ -89,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex items-center justify-around p-2 pb-safe z-50">
-        {navItems.slice(0, 5).map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href || location.startsWith(`${item.href}/`);
           return (
