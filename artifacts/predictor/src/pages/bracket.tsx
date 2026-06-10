@@ -89,17 +89,17 @@ function MatchCard({ match }: { match: BracketMatch }) {
     `}>
       {/* Match header */}
       <div className={`
-        px-3 py-1.5 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider
+        px-3 py-2 flex items-center justify-between text-xs font-bold uppercase tracking-wider
         ${isFinal ? "bg-primary/10 text-primary" : isThirdPlace ? "bg-amber-600/10 text-amber-400" : "bg-muted/60 text-muted-foreground"}
       `}>
-        <span className="flex items-center gap-1">
-          <Calendar className="w-3 h-3" />
+        <span className="flex items-center gap-1.5">
+          <Calendar className="w-4 h-4" />
           {date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}
           {" · "}
           {date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
         </span>
-        <span className="flex items-center gap-1 truncate max-w-[120px]">
-          <MapPin className="w-3 h-3 shrink-0" />
+        <span className="flex items-center gap-1.5 truncate max-w-[140px]">
+          <MapPin className="w-4 h-4 shrink-0" />
           {match.city}
         </span>
       </div>
@@ -136,7 +136,7 @@ function MatchCard({ match }: { match: BracketMatch }) {
       </div>
 
       {/* Venue footer */}
-      <div className="px-3 pb-2 text-[10px] text-muted-foreground/60 truncate">{match.stadium}</div>
+      <div className="px-3 pb-2 text-xs text-muted-foreground/60 truncate">{match.stadium}</div>
     </div>
   );
 }

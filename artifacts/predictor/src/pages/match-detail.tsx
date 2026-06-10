@@ -68,10 +68,10 @@ export function MatchDetail() {
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
-      <div className="text-center space-y-2">
-        <h1 className="text-sm font-bold tracking-widest text-primary uppercase">{match.group || match.round}</h1>
-        <p className="text-muted-foreground">{new Date(match.matchDate).toLocaleString()}</p>
-        <p className="text-sm text-muted-foreground">{match.stadium}, {match.city}</p>
+      <div className="text-center space-y-3">
+        <h1 className="text-lg font-black tracking-widest text-primary uppercase">{match.group || match.round}</h1>
+        <p className="text-base font-semibold text-foreground">{new Date(match.matchDate).toLocaleString()}</p>
+        <p className="text-base text-muted-foreground">{match.stadium}, {match.city}</p>
       </div>
 
       <Card className="bg-card border-border overflow-hidden">

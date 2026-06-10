@@ -154,26 +154,26 @@ export function Matches() {
                   <div className="flex flex-col lg:flex-row">
 
                     {/* ── Info panel ── */}
-                    <div className="lg:w-52 p-4 border-b lg:border-b-0 lg:border-r border-border bg-muted/10 flex flex-col justify-center gap-1.5">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-primary">
+                    <div className="lg:w-56 p-4 border-b lg:border-b-0 lg:border-r border-border bg-muted/10 flex flex-col justify-center gap-2">
+                      <div className="text-sm font-black uppercase tracking-widest text-primary">
                         {match.group ? `Grupo ${match.group}` : match.round}
                       </div>
 
                       {/* Colombia time */}
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                         <div>
-                          <div className="text-xs font-semibold text-foreground leading-tight">{cot.date}</div>
-                          <div className="text-xs text-primary font-mono font-bold">{cot.time}</div>
+                          <div className="text-sm font-semibold text-foreground leading-tight">{cot.date}</div>
+                          <div className="text-sm text-primary font-mono font-bold">{cot.time}</div>
                         </div>
                       </div>
 
                       {/* Stadium */}
-                      <div className="flex items-start gap-1.5">
-                        <MapPin className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                         <div>
-                          <div className="text-[11px] text-foreground/80 leading-tight">{match.stadium}</div>
-                          <div className="text-[11px] text-muted-foreground">{match.city}</div>
+                          <div className="text-sm text-foreground/80 leading-tight">{match.stadium}</div>
+                          <div className="text-sm text-muted-foreground">{match.city}</div>
                         </div>
                       </div>
 
