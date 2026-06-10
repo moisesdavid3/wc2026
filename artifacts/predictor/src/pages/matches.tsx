@@ -95,12 +95,11 @@ export function Matches() {
   if (filterStatus !== "all") filtered = filtered.filter((m) => m.status === filterStatus);
   if (filterGroup !== "all") filtered = filtered.filter((m) => m.group === filterGroup);
 
-  // Hide knockout matches before group stage ends (June 28, 2026 Colombia)
+  // Hide all knockout matches until group stage ends (June 28, 2026 Colombia)
   const KNOCKOUT_CUTOFF = new Date("2026-06-28T00:00:00-05:00");
-  filtered = filtered.filter((m) => {
-    if (m.group) return true;
-    return new Date(m.matchDate).getTime() >= KNOCKOUT_CUTOFF.getTime();
-  });
+  if (new Date() < KNOCKOUT_CUTOFF) {
+    filtered = filtered.filter((m) => m.group);
+  }
 
   const groups = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 
