@@ -39,6 +39,31 @@ export function getStoredUserId(): number | null {
 export function storeUserId(id: number) { localStorage.setItem(USER_KEY, String(id)); }
 export function clearStoredUserId() { localStorage.removeItem(USER_KEY); }
 
+export async function signUp(name: string, email: string, password: string): Promise<User> {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  // Insert into our users table
+  const { data: user, error: userError } = await supabase
+    .from("users").insert({ name: name.trim(), email: email.trim().toLowerCase() })
+    .select().single();
+  if (userError) throw userError;
+  return user as User;
+}
+
+export async function signIn(email: string, password: string): Promise<User> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  const { data: user, error: userError } = await supabase
+    .from("users").select("*").eq("email", email.trim().toLowerCase()).single();
+  if (userError) throw userError;
+  return user as User;
+}
+
+export async function signOut() {
+  await supabase.auth.signOut();
+  clearStoredUserId();
+}
+
 // ── Match helpers ─────────────────────────────────────────────────────────────
 
 function mapMatch(m: any): Match {
