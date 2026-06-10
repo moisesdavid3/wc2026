@@ -61,14 +61,14 @@ export function Leaderboard() {
 
           {/* Rank 3 */}
           <div className="flex flex-col items-center order-3 pb-8">
-            <Avatar className="w-14 h-14 border-4 border-amber-600">
+            <Avatar className="w-14 h-14 border-4 border-[#CE1126]">
               <AvatarImage src={leaderboard[2].avatarUrl || ''} />
               <AvatarFallback>{leaderboard[2].name.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="mt-4 font-bold text-center text-sm">{leaderboard[2].name}</div>
             <div className="text-primary font-black text-sm">{leaderboard[2].totalPoints} pts</div>
-            <div className="w-16 h-16 bg-amber-600 rounded-t-lg mt-4 flex justify-center pt-2">
-              <span className="font-black text-amber-800 text-xl">3</span>
+            <div className="w-16 h-16 bg-[#CE1126] rounded-t-lg mt-4 flex justify-center pt-2">
+              <span className="font-black text-white text-xl">3</span>
             </div>
           </div>
         </div>
@@ -92,7 +92,7 @@ export function Leaderboard() {
                   <td className="p-4 font-black text-muted-foreground text-center w-16">
                     {entry.rank === 1 ? <Trophy className="w-5 h-5 text-yellow-400 mx-auto" /> : 
                      entry.rank === 2 ? <Medal className="w-5 h-5 text-slate-300 mx-auto" /> : 
-                     entry.rank === 3 ? <Award className="w-5 h-5 text-amber-600 mx-auto" /> : 
+                     entry.rank === 3 ? <Award className="w-5 h-5 text-[#CE1126] mx-auto" /> :
                      entry.rank}
                   </td>
                   <td className="p-4">

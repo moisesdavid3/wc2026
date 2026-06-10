@@ -24,15 +24,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Mobile Header */}
-      <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-        <div className="flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-primary" />
-          <span className="font-bold tracking-tight">Predictor 26</span>
+      <header className="md:hidden border-b border-border bg-card">
+        {/* Colombia tricolor stripe */}
+        <div className="flex h-1.5">
+          <div className="flex-1 bg-[#FCD116]" />
+          <div className="flex-1 bg-[#003893]" />
+          <div className="flex-1 bg-[#CE1126]" />
+        </div>
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-primary" />
+            <span className="font-bold tracking-tight">Predictor 26</span>
+          </div>
         </div>
       </header>
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card/50 min-h-screen sticky top-0">
+        {/* Colombia tricolor stripe */}
+        <div className="flex h-1.5">
+          <div className="flex-1 bg-[#FCD116]" />
+          <div className="flex-1 bg-[#003893]" />
+          <div className="flex-1 bg-[#CE1126]" />
+        </div>
         <div className="p-6 flex items-center gap-3">
           <Trophy className="w-8 h-8 text-primary" />
           <span className="text-xl font-black tracking-tighter uppercase">Predictor 26</span>

@@ -5,14 +5,13 @@ import {
   useUpsertPrediction,
   getListMyPredictionsQueryKey,
 } from "@/lib/hooks";
-import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Check, MapPin, Clock } from "lucide-react";
+import { Check, MapPin, Clock, Lock } from "lucide-react";
 
 // Colombia is UTC-5 year-round (no DST)
 function formatCOT(utcString: string) {
@@ -139,6 +138,8 @@ export function Matches() {
             const isUpcoming = match.status === "upcoming";
             const isLive = match.status === "live";
             const isFinished = match.status === "finished";
+            const isLockedSoon = isUpcoming && (new Date(match.matchDate).getTime() - Date.now()) < 60 * 60 * 1000;
+            const isLocked = isFinished || isLive || isLockedSoon;
             const cot = formatCOT(match.matchDate);
             const draft = scores[match.id];
             const isSaving = saving[match.id] ?? false;
@@ -147,7 +148,7 @@ export function Matches() {
             return (
               <Card
                 key={match.id}
-                className="bg-card border-border hover:border-primary/40 transition-colors"
+                className="bg-card border-border"
               >
                 <CardContent className="p-0">
                   <div className="flex flex-col lg:flex-row">
@@ -178,8 +179,8 @@ export function Matches() {
 
                       {/* Status badge */}
                       {isLive && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary uppercase mt-1 animate-pulse">
-                          <span className="w-1.5 h-1.5 bg-primary rounded-full" />EN VIVO
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#CE1126] uppercase mt-1 animate-pulse">
+                          <span className="w-1.5 h-1.5 bg-[#CE1126] rounded-full" />EN VIVO
                         </span>
                       )}
                       {isFinished && (
@@ -188,7 +189,7 @@ export function Matches() {
                     </div>
 
                     {/* ── Teams & score ── */}
-                    <Link href={`/matches/${match.id}`} className="flex-1 p-4 flex items-center cursor-pointer">
+                    <div className="flex-1 p-4 flex items-center">
                       <div className="flex items-center justify-between w-full">
                         {/* Home */}
                         <div className="flex items-center gap-2 w-[38%] justify-end">
@@ -213,7 +214,7 @@ export function Matches() {
                           <span className="font-bold text-base sm:text-lg truncate">{match.awayTeam?.name ?? "TBD"}</span>
                         </div>
                       </div>
-                    </Link>
+                    </div>
 
                     {/* ── Prediction panel ── */}
                     <div className="lg:w-56 p-4 border-t lg:border-t-0 lg:border-l border-border bg-primary/5 flex flex-col items-center justify-center gap-2">
@@ -221,24 +222,31 @@ export function Matches() {
                         Tu predicción
                       </div>
 
-                      {isFinished || isLive ? (
-                        /* Locked — show saved prediction or dash */
-                        prediction ? (
-                          <div className="flex flex-col items-center">
-                            <div className="text-xl font-mono font-black text-foreground">
-                              {prediction.homeScore} – {prediction.awayScore}
-                            </div>
-                            {prediction.points != null && (
-                              <div className={`text-sm font-bold ${prediction.points > 0 ? "text-primary" : "text-muted-foreground"}`}>
-                                +{prediction.points} pts
+                      {isLocked ? (
+                        /* Locked */
+                        <div className="flex flex-col items-center gap-1.5 text-center">
+                          {prediction ? (
+                            <>
+                              <div className="text-xl font-mono font-black text-foreground">
+                                {prediction.homeScore} – {prediction.awayScore}
                               </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-muted-foreground italic">—</div>
-                        )
+                              {prediction.points != null && (
+                                <div className={`text-sm font-bold ${prediction.points > 0 ? "text-primary" : "text-muted-foreground"}`}>
+                                  +{prediction.points} pts
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-sm text-muted-foreground italic">—</div>
+                          )}
+                          {isLockedSoon && (
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-destructive uppercase tracking-widest mt-1">
+                              <Lock className="w-3 h-3" />Cerrado
+                            </div>
+                          )}
+                        </div>
                       ) : (
-                        /* Upcoming — editable inputs */
+                        /* Upcoming & open — editable inputs */
                         <div className="w-full space-y-2">
                           <div className="flex items-center justify-center gap-2">
                             <Input

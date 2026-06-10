@@ -26,8 +26,12 @@ export type User = {
 };
 
 export type Prediction = {
-  id: number; user_id: number; match_id: number;
-  home_score: number; away_score: number; points: number | null;
+  id: number;
+  user_id: number; userId: number;
+  match_id: number; matchId: number;
+  home_score: number; homeScore: number;
+  away_score: number; awayScore: number;
+  points: number | null;
 };
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
@@ -241,11 +245,14 @@ export function useGetMyStats() {
     queryKey: ["myStats", userId],
     queryFn: async () => {
       if (!userId) return null;
-      const { data: preds } = await supabase
-        .from("predictions").select("points").eq("user_id", userId).not("points", "is", null);
-      const total = (preds ?? []).reduce((s: number, p: any) => s + (p.points ?? 0), 0);
-      const exact = (preds ?? []).filter((p: any) => p.points === 3).length;
-      const correct = (preds ?? []).filter((p: any) => p.points === 1).length;
+      const [{ data: allPreds }, { data: scoredPreds }] = await Promise.all([
+        supabase.from("predictions").select("id").eq("user_id", userId),
+        supabase.from("predictions").select("points").eq("user_id", userId).not("points", "is", null),
+      ]);
+      const totalPredictions = (allPreds ?? []).length;
+      const total = (scoredPreds ?? []).reduce((s: number, p: any) => s + (p.points ?? 0), 0);
+      const exact = (scoredPreds ?? []).filter((p: any) => p.points === 3).length;
+      const correct = (scoredPreds ?? []).filter((p: any) => p.points === 1).length;
 
       // rank
       const lb = await supabase.from("predictions")
@@ -255,7 +262,7 @@ export function useGetMyStats() {
       const sorted = Object.values(scores).sort((a, b) => b - a);
       const rank = sorted.findIndex(s => s <= total) + 1;
 
-      return { totalPoints: total, exactPredictions: exact, correctOutcomes: correct, rank: rank || 1 };
+      return { totalPoints: total, exactPredictions: exact, correctOutcomes: correct, rank: rank || 1, totalPredictions };
     },
     enabled: !!userId,
   });
@@ -329,7 +336,11 @@ export function useListMyPredictions() {
       const { data, error } = await supabase
         .from("predictions").select("*").eq("user_id", userId);
       if (error) throw error;
-      return (data ?? []) as Prediction[];
+      return (data ?? []).map((p: any) => ({
+        ...p,
+        userId: p.user_id, matchId: p.match_id,
+        homeScore: p.home_score, awayScore: p.away_score,
+      })) as Prediction[];
     },
     enabled: !!userId,
   });
@@ -339,17 +350,19 @@ export function useUpsertPrediction() {
   const userId = getStoredUserId();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (vars: { matchId: number; homeScore: number; awayScore: number }) => {
+    mutationFn: async (vars: { matchId: number; homeScore: number; awayScore: number } | { data: { matchId: number; homeScore: number; awayScore: number } }) => {
+      const v = "data" in vars ? vars.data : vars;
       const { data, error } = await supabase.from("predictions")
-        .upsert({ user_id: userId!, match_id: vars.matchId, home_score: vars.homeScore, away_score: vars.awayScore },
+        .upsert({ user_id: userId!, match_id: v.matchId, home_score: v.homeScore, away_score: v.awayScore },
           { onConflict: "user_id,match_id" })
         .select().single();
       if (error) throw error;
       return data;
     },
     onSuccess: (_d, vars) => {
+      const v = "data" in vars ? vars.data : vars;
       qc.invalidateQueries({ queryKey: ["myPredictions"] });
-      qc.invalidateQueries({ queryKey: ["match", vars.matchId] });
+      qc.invalidateQueries({ queryKey: ["match", v.matchId] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
