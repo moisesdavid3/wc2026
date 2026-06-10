@@ -9,10 +9,15 @@ export type Team = {
 };
 
 export type Match = {
-  id: number; match_number: number | null; match_date: string;
+  id: number;
+  match_number: number | null; matchNumber: number | null;
+  match_date: string; matchDate: string;
   stadium: string; city: string; round: string; group: string | null;
-  status: string; home_score: number | null; away_score: number | null;
-  home_team: Team | null; away_team: Team | null;
+  status: string;
+  home_score: number | null; homeScore: number | null;
+  away_score: number | null; awayScore: number | null;
+  home_team: Team | null; homeTeam: Team | null;
+  away_team: Team | null; awayTeam: Team | null;
 };
 
 export type User = {
@@ -69,12 +74,19 @@ export async function signOut() {
 function mapMatch(m: any): Match {
   return {
     ...m,
+    // camelCase aliases for page components
+    matchDate: m.match_date ?? m.matchDate,
+    matchNumber: m.match_number ?? m.matchNumber,
+    homeScore: m.home_score ?? m.homeScore,
+    awayScore: m.away_score ?? m.awayScore,
+    homeTeam: m.home_team ?? m.homeTeam ?? null,
+    awayTeam: m.away_team ?? m.awayTeam ?? null,
     home_team: m.home_team ?? null,
     away_team: m.away_team ?? null,
   };
 }
 
-const MATCH_SELECT = `*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)`;
+const MATCH_SELECT = `*, home_team:home_team_id(*), away_team:away_team_id(*)`;
 
 // ── Matches ───────────────────────────────────────────────────────────────────
 
@@ -136,11 +148,40 @@ export function useGetGroups() {
         supabase.from("matches").select(MATCH_SELECT).eq("round", "Group Stage").order("match_number"),
       ]);
       const groupNames = [...new Set((teams ?? []).map((t: Team) => t.group).filter(Boolean) as string[])].sort();
-      return groupNames.map(g => ({
-        name: g,
-        teams: (teams ?? []).filter((t: Team) => t.group === g),
-        matches: ((matches ?? []) as any[]).filter((m: any) => m.group === g).map(mapMatch),
-      }));
+
+      return groupNames.map(g => {
+        const groupTeams = (teams ?? []).filter((t: Team) => t.group === g);
+        const groupMatches = ((matches ?? []) as any[]).filter((m: any) => m.group === g).map(mapMatch);
+
+        // Compute standings from completed matches
+        const stats: Record<number, { team: Team; played: number; won: number; drawn: number; lost: number; gf: number; ga: number }> = {};
+        for (const t of groupTeams) {
+          stats[t.id] = { team: t, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0 };
+        }
+        for (const m of groupMatches) {
+          if (m.status !== "completed" || m.home_score == null || m.away_score == null) continue;
+          const h = m.home_team?.id, a = m.away_team?.id;
+          if (!h || !a || !stats[h] || !stats[a]) continue;
+          stats[h].played++; stats[a].played++;
+          stats[h].gf += m.home_score; stats[h].ga += m.away_score;
+          stats[a].gf += m.away_score; stats[a].ga += m.home_score;
+          if (m.home_score > m.away_score) { stats[h].won++; stats[a].lost++; }
+          else if (m.home_score < m.away_score) { stats[a].won++; stats[h].lost++; }
+          else { stats[h].drawn++; stats[a].drawn++; }
+        }
+
+        const standings = Object.values(stats)
+          .map(s => ({
+            teamId: s.team.id, team: s.team,
+            played: s.played, won: s.won, drawn: s.drawn, lost: s.lost,
+            goalsFor: s.gf, goalsAgainst: s.ga,
+            goalDifference: s.gf - s.ga,
+            points: s.won * 3 + s.drawn,
+          }))
+          .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor);
+
+        return { group: g, teams: groupTeams, matches: groupMatches, standings };
+      });
     },
   });
 }
