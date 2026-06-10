@@ -4,7 +4,7 @@ import {
   useListMyPredictions,
   useUpsertPrediction,
   getListMyPredictionsQueryKey,
-} from "@workspace/api-client-react";
+} from "@/lib/hooks";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

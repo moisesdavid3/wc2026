@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Trophy, ChevronRight, Globe, BarChart3, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGetLeaderboard } from "@workspace/api-client-react";
+import { useGetLeaderboard } from "@/lib/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Home() {

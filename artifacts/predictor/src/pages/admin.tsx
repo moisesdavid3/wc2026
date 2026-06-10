@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useUpdateUserRole, getListMatchesQueryKey, getListUsersQueryKey } from "@workspace/api-client-react";
+import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useUpdateUserRole, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

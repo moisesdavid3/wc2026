@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useUserContext } from "@/contexts/user";
-import { useGetMe } from "@workspace/api-client-react";
+import { useGetMe } from "@/lib/hooks";
 import { Trophy, Home, CalendarDays, LayoutList, User as UserIcon, LogOut, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

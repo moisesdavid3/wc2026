@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useUserContext } from "@/contexts/user";
-import { setExtraHeaders } from "@workspace/api-client-react";
+import { requestLoginCode, verifyLoginCode } from "@/lib/hooks";
 
 type Step = "email" | "code";
 
@@ -17,17 +17,12 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const { setUserId } = useUserContext();
 
-  async function requestCode(e: React.FormEvent) {
+  async function handleRequestCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Failed");
+      await requestLoginCode(email.trim().toLowerCase());
       setStep("code");
     } catch (err: any) {
       setError(err.message ?? "Something went wrong");
@@ -36,19 +31,12 @@ export function Login() {
     }
   }
 
-  async function verifyCode(e: React.FormEvent) {
+  async function handleVerifyCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim() }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error ?? "Invalid code");
-      const user = await res.json();
-      setExtraHeaders({ "x-user-id": String(user.id) });
+      const user = await verifyLoginCode(email.trim().toLowerCase(), code.trim());
       setUserId(user.id);
     } catch (err: any) {
       setError(err.message ?? "Invalid or expired code");
@@ -74,65 +62,53 @@ export function Login() {
 
         <CardContent>
           {step === "email" ? (
-            <form onSubmit={requestCode} className="space-y-4">
+            <form onSubmit={handleRequestCode} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2">
                   <Mail className="w-4 h-4" /> Email address
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  autoFocus
-                  disabled={loading}
+                  id="email" type="email" placeholder="you@example.com"
+                  value={email} onChange={e => setEmail(e.target.value)}
+                  required autoFocus disabled={loading}
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full font-bold" disabled={loading || !email.trim()}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Send code <ArrowRight className="ml-2 w-4 h-4" /></>}
+                {loading
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <>Send code <ArrowRight className="ml-2 w-4 h-4" /></>}
               </Button>
             </form>
           ) : (
-            <form onSubmit={verifyCode} className="space-y-4">
+            <form onSubmit={handleVerifyCode} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="code" className="flex items-center gap-2">
                   <KeyRound className="w-4 h-4" /> 6-digit code
                 </Label>
                 <Input
-                  id="code"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  placeholder="123456"
-                  value={code}
-                  onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
-                  required
-                  autoFocus
-                  disabled={loading}
+                  id="code" type="text" inputMode="numeric"
+                  pattern="[0-9]{6}" maxLength={6} placeholder="123456"
+                  value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ""))}
+                  required autoFocus disabled={loading}
                   className="text-center text-2xl font-black tracking-[0.5em]"
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button
-                type="submit"
-                className="w-full font-bold"
-                disabled={loading || code.length !== 6}
-              >
+              <Button type="submit" className="w-full font-bold" disabled={loading || code.length !== 6}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign in"}
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-muted-foreground"
-                onClick={() => { setStep("email"); setCode(""); setError(null); }}
-              >
+              <Button type="button" variant="ghost" className="w-full text-muted-foreground"
+                onClick={() => { setStep("email"); setCode(""); setError(null); }}>
                 ← Use a different email
               </Button>
             </form>
+          )}
+
+          {step === "code" && (
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Can't find the email? Check your browser's developer console (F12) for the code during testing.
+            </p>
           )}
         </CardContent>
       </Card>

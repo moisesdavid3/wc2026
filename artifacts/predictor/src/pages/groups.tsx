@@ -1,4 +1,4 @@
-import { useListGroups } from "@workspace/api-client-react";
+import { useListGroups } from "@/lib/hooks";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export function Groups() {

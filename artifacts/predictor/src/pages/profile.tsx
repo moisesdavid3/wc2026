@@ -1,4 +1,4 @@
-import { useGetMe, useGetMyStats, useListMyPredictions, useListMatches } from "@workspace/api-client-react";
+import { useGetMe, useGetMyStats, useListMyPredictions, useListMatches } from "@/lib/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, CalendarDays, CheckCircle2, Target } from "lucide-react";

@@ -1,4 +1,4 @@
-import { useGetBracket } from "@workspace/api-client-react";
+import { useGetBracket } from "@/lib/hooks";
 import { Trophy, MapPin, Calendar } from "lucide-react";
 
 // Slot labels for each knockout match (by matchNumber)

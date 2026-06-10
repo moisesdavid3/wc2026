@@ -1,4 +1,4 @@
-import { useGetDashboard } from "@workspace/api-client-react";
+import { useGetDashboard } from "@/lib/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Target, CheckCircle2, TrendingUp, ChevronRight } from "lucide-react";
 import { Countdown } from "@/components/countdown";

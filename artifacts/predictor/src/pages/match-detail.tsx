@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGetMatch, useUpsertPrediction, getGetMatchQueryKey, getListMyPredictionsQueryKey } from "@workspace/api-client-react";
+import { useGetMatch, useUpsertPrediction, getGetMatchQueryKey, getListMyPredictionsQueryKey } from "@/lib/hooks";
 import { useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

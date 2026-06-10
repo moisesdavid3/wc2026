@@ -1,4 +1,4 @@
-import { useGetLeaderboard, useGetMyStats } from "@workspace/api-client-react";
+import { useGetLeaderboard, useGetMyStats } from "@/lib/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Trophy, Medal, Award } from "lucide-react";
