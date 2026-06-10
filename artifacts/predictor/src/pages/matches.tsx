@@ -121,7 +121,7 @@ export function Matches() {
           </Select>
 
           <Select value={filterGroup} onValueChange={setFilterGroup}>
-            <SelectTrigger className="w-[130px] bg-card">
+            <SelectTrigger className="w-[160px] bg-card">
               <SelectValue placeholder="Grupo" />
             </SelectTrigger>
             <SelectContent>
