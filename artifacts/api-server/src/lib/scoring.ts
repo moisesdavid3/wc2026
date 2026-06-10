@@ -21,8 +21,8 @@ export function calculatePoints(
     }
   }
 
-  // Goal difference bonus: 1 point if absolute diff matches (any number)
-  if (Math.abs(predHome - predAway) === Math.abs(actualHome - actualAway)) {
+  // Goal difference bonus: 1 point if absolute diff matches (not for exact score)
+  if (!exact && Math.abs(predHome - predAway) === Math.abs(actualHome - actualAway)) {
     points += 1;
   }
 
