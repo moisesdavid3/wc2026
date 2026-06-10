@@ -31,7 +31,7 @@ export function Login() {
       const user = await signIn(signInEmail, signInPassword);
       setUserId(user.id);
     } catch (err: any) {
-      setSignInError(err.message ?? "Invalid email or password");
+      setSignInError(err.message ?? "Correo o contraseña inválidos");
     } finally {
       setSignInLoading(false);
     }
@@ -41,11 +41,11 @@ export function Login() {
     e.preventDefault();
     setSignUpError(null);
     if (signUpPassword !== signUpConfirm) {
-      setSignUpError("Passwords don't match");
+      setSignUpError("Las contraseñas no coinciden");
       return;
     }
     if (signUpPassword.length < 6) {
-      setSignUpError("Password must be at least 6 characters");
+      setSignUpError("Mínimo 6 caracteres");
       return;
     }
     setSignUpLoading(true);
@@ -53,7 +53,7 @@ export function Login() {
       const user = await signUp(signUpName, signUpEmail, signUpPassword);
       setUserId(user.id);
     } catch (err: any) {
-      setSignUpError(err.message ?? "Could not create account");
+      setSignUpError(err.message ?? "No se pudo crear la cuenta");
     } finally {
       setSignUpLoading(false);
     }
@@ -67,28 +67,27 @@ export function Login() {
             <Trophy className="w-14 h-14 text-primary" />
           </div>
           <h1 className="text-3xl font-black uppercase tracking-tight">Predictor 26</h1>
-          <p className="text-muted-foreground mt-1">FIFA World Cup 2026 prediction pool</p>
+          <p className="text-muted-foreground mt-1">Pool de pronósticos del Mundial 2026</p>
         </div>
 
         <Card className="bg-card border-border">
           <CardContent className="pt-6">
             <Tabs defaultValue="signin">
               <TabsList className="w-full mb-6">
-                <TabsTrigger value="signin" className="flex-1">Sign In</TabsTrigger>
-                <TabsTrigger value="signup" className="flex-1">Create Account</TabsTrigger>
+                <TabsTrigger value="signin" className="flex-1">Iniciar Sesión</TabsTrigger>
+                <TabsTrigger value="signup" className="flex-1">Crear Cuenta</TabsTrigger>
               </TabsList>
 
-              {/* Sign In */}
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="si-email">Email</Label>
-                    <Input id="si-email" type="email" placeholder="you@example.com"
+                    <Label htmlFor="si-email">Correo electrónico</Label>
+                    <Input id="si-email" type="email" placeholder="tu@ejemplo.com"
                       value={signInEmail} onChange={e => setSignInEmail(e.target.value)}
                       required autoFocus disabled={signInLoading} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="si-password">Password</Label>
+                    <Label htmlFor="si-password">Contraseña</Label>
                     <Input id="si-password" type="password" placeholder="••••••••"
                       value={signInPassword} onChange={e => setSignInPassword(e.target.value)}
                       required disabled={signInLoading} />
@@ -96,34 +95,33 @@ export function Login() {
                   {signInError && <p className="text-sm text-destructive">{signInError}</p>}
                   <Button type="submit" className="w-full font-bold"
                     disabled={signInLoading || !signInEmail || !signInPassword}>
-                    {signInLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                    {signInLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Iniciar Sesión"}
                   </Button>
                 </form>
               </TabsContent>
 
-              {/* Create Account */}
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="su-name">Your name</Label>
-                    <Input id="su-name" type="text" placeholder="e.g. Moisés"
+                    <Label htmlFor="su-name">Tu nombre</Label>
+                    <Input id="su-name" type="text" placeholder="Ej: Moisés"
                       value={signUpName} onChange={e => setSignUpName(e.target.value)}
                       required autoFocus disabled={signUpLoading} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="su-email">Email</Label>
-                    <Input id="su-email" type="email" placeholder="you@example.com"
+                    <Label htmlFor="su-email">Correo electrónico</Label>
+                    <Input id="su-email" type="email" placeholder="tu@ejemplo.com"
                       value={signUpEmail} onChange={e => setSignUpEmail(e.target.value)}
                       required disabled={signUpLoading} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="su-password">Password</Label>
-                    <Input id="su-password" type="password" placeholder="At least 6 characters"
+                    <Label htmlFor="su-password">Contraseña</Label>
+                    <Input id="su-password" type="password" placeholder="Mínimo 6 caracteres"
                       value={signUpPassword} onChange={e => setSignUpPassword(e.target.value)}
                       required disabled={signUpLoading} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="su-confirm">Confirm password</Label>
+                    <Label htmlFor="su-confirm">Confirmar contraseña</Label>
                     <Input id="su-confirm" type="password" placeholder="••••••••"
                       value={signUpConfirm} onChange={e => setSignUpConfirm(e.target.value)}
                       required disabled={signUpLoading} />
@@ -131,7 +129,7 @@ export function Login() {
                   {signUpError && <p className="text-sm text-destructive">{signUpError}</p>}
                   <Button type="submit" className="w-full font-bold"
                     disabled={signUpLoading || !signUpName || !signUpEmail || !signUpPassword || !signUpConfirm}>
-                    {signUpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Account"}
+                    {signUpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Crear Cuenta"}
                   </Button>
                 </form>
               </TabsContent>

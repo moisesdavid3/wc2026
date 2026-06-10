@@ -18,8 +18,8 @@ export function Groups() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-black tracking-tight uppercase">Group Stage</h1>
-        <p className="text-muted-foreground mt-1">Standings</p>
+        <h1 className="text-3xl font-black tracking-tight uppercase">Fase de Grupos</h1>
+        <p className="text-muted-foreground mt-1">Clasificación</p>
       </div>
 
       <div className="grid xl:grid-cols-2 gap-6">
@@ -35,11 +35,11 @@ export function Groups() {
                     <tr className="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
                       <th className="px-4 py-3 font-bold w-8">#</th>
                       <th className="px-4 py-3 font-bold">Team</th>
-                      <th className="px-3 py-3 font-bold text-center" title="Played">MP</th>
-                      <th className="px-3 py-3 font-bold text-center" title="Won">W</th>
-                      <th className="px-3 py-3 font-bold text-center" title="Drawn">D</th>
-                      <th className="px-3 py-3 font-bold text-center" title="Lost">L</th>
-                      <th className="px-3 py-3 font-bold text-center" title="Goal Difference">GD</th>
+                      <th className="px-3 py-3 font-bold text-center" title="Jugados">PJ</th>
+                      <th className="px-3 py-3 font-bold text-center" title="Ganados">G</th>
+                      <th className="px-3 py-3 font-bold text-center" title="Empatados">E</th>
+                      <th className="px-3 py-3 font-bold text-center" title="Perdidos">P</th>
+                      <th className="px-3 py-3 font-bold text-center" title="Dif. Goles">DG</th>
                       <th className="px-4 py-3 font-black text-primary text-center">PTS</th>
                     </tr>
                   </thead>

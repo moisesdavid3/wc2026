@@ -38,7 +38,7 @@ export function Profile() {
               <p className="text-muted-foreground">{user.email}</p>
             </div>
             <div className="bg-primary/10 border border-primary px-6 py-3 rounded-xl text-center mb-2">
-              <div className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Rank</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Posición</div>
               <div className="text-3xl font-black text-primary">#{stats.rank}</div>
             </div>
           </div>
@@ -51,28 +51,28 @@ export function Profile() {
           <CardContent className="p-6 flex flex-col items-center justify-center text-center">
             <Trophy className="w-8 h-8 text-primary mb-4" />
             <div className="text-3xl font-black">{stats.totalPoints}</div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Total Points</div>
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Puntos Totales</div>
           </CardContent>
         </Card>
         <Card className="bg-card border-border">
           <CardContent className="p-6 flex flex-col items-center justify-center text-center">
             <Target className="w-8 h-8 text-primary mb-4" />
             <div className="text-3xl font-black">{stats.exactPredictions}</div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Exact Scores</div>
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Exactos</div>
           </CardContent>
         </Card>
         <Card className="bg-card border-border">
           <CardContent className="p-6 flex flex-col items-center justify-center text-center">
             <CheckCircle2 className="w-8 h-8 text-primary mb-4" />
             <div className="text-3xl font-black">{stats.correctOutcomes}</div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Correct Outcomes</div>
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Correctos</div>
           </CardContent>
         </Card>
         <Card className="bg-card border-border">
           <CardContent className="p-6 flex flex-col items-center justify-center text-center">
             <CalendarDays className="w-8 h-8 text-primary mb-4" />
             <div className="text-3xl font-black">{stats.totalPredictions}</div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Predictions Made</div>
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Pronosticados</div>
           </CardContent>
         </Card>
       </div>
@@ -80,12 +80,12 @@ export function Profile() {
       {/* Prediction History */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="uppercase tracking-widest text-primary">Recent Results</CardTitle>
+          <CardTitle className="uppercase tracking-widest text-primary">Resultados</CardTitle>
         </CardHeader>
         <CardContent>
           {completedPredictions.length === 0 ? (
             <div className="text-center p-8 text-muted-foreground">
-              No completed predictions yet.
+              Sin resultados aún.
             </div>
           ) : (
             <div className="space-y-4">
@@ -112,11 +112,11 @@ export function Profile() {
                       
                       <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-48 sm:border-l border-border sm:pl-6">
                         <div className="text-center">
-                          <div className="text-[10px] text-muted-foreground uppercase font-bold">Predicted</div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-bold">Pronóstico</div>
                           <div className="font-mono font-bold text-sm">{pred.homeScore} - {pred.awayScore}</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-[10px] text-muted-foreground uppercase font-bold">Points</div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-bold">Pts</div>
                           <div className={`font-black text-lg ${pred.points && pred.points > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                             +{pred.points}
                           </div>

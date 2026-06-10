@@ -35,16 +35,16 @@ export function Setup() {
           </div>
           <CardTitle className="text-2xl font-black uppercase tracking-tight">Predictor 26</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Set up your profile to start predicting
+            Configura tu perfil para empezar
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Your name *</Label>
+              <Label htmlFor="name">Tu nombre *</Label>
               <Input
                 id="name"
-                placeholder="e.g. Moisés"
+                placeholder="Ej: Moisés"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -52,11 +52,11 @@ export function Setup() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email (optional)</Label>
+              <Label htmlFor="email">Correo (opcional)</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="tu@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -66,11 +66,11 @@ export function Setup() {
               className="w-full font-bold"
               disabled={!name.trim() || createUser.isPending}
             >
-              {createUser.isPending ? "Creating..." : "Join the pool"}
+              {createUser.isPending ? "Creando..." : "Únete"}
             </Button>
             {createUser.isError && (
               <p className="text-sm text-destructive text-center">
-                Something went wrong. Please try again.
+                Algo salió mal. Intenta de nuevo.
               </p>
             )}
           </form>

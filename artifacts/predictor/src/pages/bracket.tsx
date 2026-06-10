@@ -45,6 +45,15 @@ const ROUND_ORDER = [
   "Final",
 ];
 
+const ROUND_LABELS: Record<string, string> = {
+  "Round of 32": "Ronda de 32",
+  "Round of 16": "Octavos de Final",
+  "Quarterfinals": "Cuartos de Final",
+  "Semifinals": "Semifinales",
+  "Third Place": "Tercer Lugar",
+  "Final": "Final",
+};
+
 const ROUND_COLS: Record<string, string> = {
   "Round of 32":   "grid-cols-2 sm:grid-cols-4",
   "Round of 16":   "grid-cols-2 sm:grid-cols-4",
@@ -163,9 +172,9 @@ export function Bracket() {
       <div>
         <h1 className="text-3xl font-black tracking-tight uppercase flex items-center gap-3">
           <Trophy className="w-7 h-7 text-primary" />
-          Knockout Stage
+          Fase Eliminatoria
         </h1>
-        <p className="text-muted-foreground mt-1">FIFA World Cup 2026 · July 2 – 19</p>
+        <p className="text-muted-foreground mt-1">Copa Mundial 2026 · 2 – 19 Jul</p>
       </div>
 
       {ROUND_ORDER.map(roundName => {
@@ -182,9 +191,9 @@ export function Bracket() {
             `}>
               {isFinal && <span className="mr-2">🏆</span>}
               {isThirdPlace && <span className="mr-2">🥉</span>}
-              {roundName}
+              {ROUND_LABELS[roundName] ?? roundName}
               <span className="ml-2 text-xs font-normal text-muted-foreground normal-case tracking-normal">
-                {matches.length} match{matches.length !== 1 ? "es" : ""}
+                {matches.length} {matches.length === 1 ? "partido" : "partidos"}
               </span>
             </h2>
             <div className={`grid gap-3 ${ROUND_COLS[roundName] ?? "grid-cols-2 sm:grid-cols-4"}`}>

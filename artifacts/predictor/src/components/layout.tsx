@@ -13,12 +13,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.role === "admin";
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
-    { href: "/matches", label: "Matches", icon: CalendarDays },
-    { href: "/groups", label: "Groups", icon: LayoutList },
-    { href: "/bracket", label: "Bracket", icon: Trophy },
-    { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-    { href: "/profile", label: "Profile", icon: UserIcon },
+    { href: "/dashboard", label: "Panel", icon: Home },
+    { href: "/matches", label: "Partidos", icon: CalendarDays },
+    { href: "/groups", label: "Grupos", icon: LayoutList },
+    { href: "/bracket", label: "Eliminatoria", icon: Trophy },
+    { href: "/leaderboard", label: "Clasificación", icon: Trophy },
+    { href: "/profile", label: "Perfil", icon: UserIcon },
   ];
 
   return (
@@ -75,7 +75,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-4 border-t border-border">
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={() => clearUserId()} data-testid="button-logout">
             <LogOut className="w-5 h-5 mr-3" />
-            Sign Out
+            Cerrar Sesión
           </Button>
         </div>
       </aside>

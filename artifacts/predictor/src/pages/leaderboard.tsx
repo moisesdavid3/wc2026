@@ -18,12 +18,12 @@ export function Leaderboard() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black tracking-tight uppercase">Leaderboard</h1>
-          <p className="text-muted-foreground mt-1">Global rankings</p>
+          <h1 className="text-3xl font-black tracking-tight uppercase">Clasificación</h1>
+          <p className="text-muted-foreground mt-1">Clasificación global</p>
         </div>
         {myStats && (
           <div className="text-right">
-            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Your Rank</div>
+            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Tu Posición</div>
             <div className="text-3xl font-black text-primary">#{myStats.rank}</div>
           </div>
         )}
@@ -79,11 +79,11 @@ export function Leaderboard() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
-                <th className="p-4 font-bold">Rank</th>
-                <th className="p-4 font-bold">Player</th>
-                <th className="p-4 font-bold text-center">Exact</th>
-                <th className="p-4 font-bold text-center">Outcome</th>
-                <th className="p-4 font-bold text-right">Points</th>
+                <th className="p-4 font-bold">Pos</th>
+                <th className="p-4 font-bold">Jugador</th>
+                <th className="p-4 font-bold text-center">Exacto</th>
+                <th className="p-4 font-bold text-center">Resultado</th>
+                <th className="p-4 font-bold text-right">Pts</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

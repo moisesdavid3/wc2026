@@ -21,7 +21,7 @@ export function Countdown({ targetDate }: { targetDate: string }) {
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  if (!timeLeft) return <span className="text-primary font-bold">KICKOFF</span>;
+  if (!timeLeft) return <span className="text-primary font-bold">INICIO</span>;
 
   const units = [
     { value: timeLeft.d, label: timeLeft.d === 1 ? "Día" : "Días" },

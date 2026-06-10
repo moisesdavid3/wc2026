@@ -52,11 +52,11 @@ export function Admin() {
       }
     }, {
       onSuccess: () => {
-        toast({ title: "Result saved" });
+        toast({ title: "Guardado" });
         queryClient.invalidateQueries({ queryKey: getListMatchesQueryKey() });
       },
       onError: () => {
-        toast({ title: "Error saving result", variant: "destructive" });
+        toast({ title: "Error al guardar", variant: "destructive" });
       }
     });
   };
@@ -67,7 +67,7 @@ export function Admin() {
       data: { role }
     }, {
       onSuccess: () => {
-        toast({ title: "Role updated" });
+        toast({ title: "Rol actualizado" });
         queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
       }
     });
@@ -78,8 +78,8 @@ export function Admin() {
       <div className="flex items-center gap-3">
         <ShieldAlert className="w-8 h-8 text-destructive" />
         <div>
-          <h1 className="text-3xl font-black tracking-tight uppercase">Admin Panel</h1>
-          <p className="text-muted-foreground mt-1">Manage tournament results and users</p>
+          <h1 className="text-3xl font-black tracking-tight uppercase">Panel Admin</h1>
+          <p className="text-muted-foreground mt-1">Gestiona resultados y usuarios</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function Admin() {
         {/* Match Results */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="uppercase tracking-widest text-primary">Match Results</CardTitle>
+            <CardTitle className="uppercase tracking-widest text-primary">Resultados</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
             {matches?.map(match => (
@@ -133,7 +133,7 @@ export function Admin() {
                   onClick={() => handleSaveResult(match.id)}
                   disabled={!scores[match.id]?.home || !scores[match.id]?.away}
                 >
-                  Set Official Result
+                  Resultado Oficial
                 </Button>
               </div>
             ))}
@@ -143,7 +143,7 @@ export function Admin() {
         {/* Users */}
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="uppercase tracking-widest text-primary">User Roles</CardTitle>
+            <CardTitle className="uppercase tracking-widest text-primary">Usuarios</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="divide-y divide-border">
@@ -161,7 +161,7 @@ export function Admin() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="user">Usuario</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>

@@ -50,8 +50,8 @@ export function MatchDetail() {
     }, {
       onSuccess: () => {
         toast({
-          title: "Prediction saved",
-          description: "Your prediction has been recorded.",
+          title: "Pronóstico guardado",
+          description: "Tu pronóstico fue registrado.",
         });
         queryClient.invalidateQueries({ queryKey: getGetMatchQueryKey(matchId) });
         queryClient.invalidateQueries({ queryKey: getListMyPredictionsQueryKey() });
@@ -59,7 +59,7 @@ export function MatchDetail() {
       onError: (err) => {
         toast({
           title: "Error",
-          description: "Failed to save prediction.",
+          description: "No se pudo guardar.",
           variant: "destructive"
         });
       }
@@ -92,8 +92,8 @@ export function MatchDetail() {
                     {match.homeScore} - {match.awayScore}
                   </div>
                 )}
-                {match.status === 'live' && <div className="text-primary font-bold mt-2 animate-pulse">LIVE</div>}
-                {match.status === 'finished' && <div className="text-muted-foreground font-bold mt-2">FULL TIME</div>}
+                {match.status === 'live' && <div className="text-primary font-bold mt-2 animate-pulse">EN VIVO</div>}
+                {match.status === 'finished' && <div className="text-muted-foreground font-bold mt-2">FINAL</div>}
               </div>
 
               <div className="flex flex-col items-center gap-4 w-1/3">
@@ -109,7 +109,7 @@ export function MatchDetail() {
         {/* Prediction Form */}
         <Card className="bg-card border-border">
           <CardContent className="p-6 space-y-6">
-            <h2 className="text-xl font-bold uppercase tracking-tight text-center">Your Prediction</h2>
+            <h2 className="text-xl font-bold uppercase tracking-tight text-center">Tu Pronóstico</h2>
             
             <div className="flex items-center justify-center gap-6">
               <div className="space-y-2 text-center">
@@ -147,12 +147,12 @@ export function MatchDetail() {
               disabled={isLocked || upsertPrediction.isPending}
               data-testid="button-submit-prediction"
             >
-              {isLocked ? "Match Locked" : (upsertPrediction.isPending ? "Saving..." : "Save Prediction")}
+              {isLocked ? "Partido Bloqueado" : (upsertPrediction.isPending ? "Guardando..." : "Guardar Pronóstico")}
             </Button>
             
             {match.myPrediction && match.myPrediction.points !== null && match.myPrediction.points !== undefined && (
               <div className="text-center pt-4 border-t border-border">
-                <div className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-1">Points Earned</div>
+                <div className="text-sm text-muted-foreground uppercase font-bold tracking-wider mb-1">Puntos Obtenidos</div>
                 <div className="text-3xl font-black text-primary">+{match.myPrediction.points}</div>
               </div>
             )}
@@ -162,15 +162,15 @@ export function MatchDetail() {
         {/* Community Stats */}
         <Card className="bg-card border-border">
           <CardContent className="p-6 space-y-6">
-            <h2 className="text-xl font-bold uppercase tracking-tight text-center">Community</h2>
+            <h2 className="text-xl font-bold uppercase tracking-tight text-center">Comunidad</h2>
             <div className="text-center text-sm text-muted-foreground mb-6">
-              Based on {match.predictionStats.totalPredictions} predictions
+              Basado en {match.predictionStats.totalPredictions} pronósticos
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm font-bold">
-                  <span>{match.homeTeam?.name} Win</span>
+                  <span>{match.homeTeam?.name} Gana</span>
                   <span>{Math.round(match.predictionStats.homeWinPct)}%</span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
@@ -180,7 +180,7 @@ export function MatchDetail() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm font-bold">
-                  <span>Draw</span>
+                  <span>Empate</span>
                   <span>{Math.round(match.predictionStats.drawPct)}%</span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
@@ -190,7 +190,7 @@ export function MatchDetail() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm font-bold">
-                  <span>{match.awayTeam?.name} Win</span>
+                  <span>{match.awayTeam?.name} Gana</span>
                   <span>{Math.round(match.predictionStats.awayWinPct)}%</span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">

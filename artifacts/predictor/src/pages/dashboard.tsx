@@ -31,9 +31,9 @@ export function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black tracking-tight uppercase">Dashboard</h1>
+          <h1 className="text-3xl font-black tracking-tight uppercase">Panel</h1>
         <p className="text-muted-foreground mt-1">
-          {tournamentProgress.currentRound} • {tournamentProgress.finishedMatches} / {tournamentProgress.totalMatches} Matches Played
+          {tournamentProgress.currentRound} • {tournamentProgress.finishedMatches} / {tournamentProgress.totalMatches} Partidos Jugados
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Rank</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Posición</CardTitle>
             <Trophy className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -51,7 +51,7 @@ export function Dashboard() {
         
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Points</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Puntos</CardTitle>
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -61,7 +61,7 @@ export function Dashboard() {
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Exact Scores</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Exactos</CardTitle>
             <Target className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -71,7 +71,7 @@ export function Dashboard() {
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Correct Outcome</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Resultado Correcto</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -84,10 +84,10 @@ export function Dashboard() {
         {/* Upcoming Matches */}
         <div className="md:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold uppercase tracking-tight">Up Next</h2>
+            <h2 className="text-xl font-bold uppercase tracking-tight">Próximos</h2>
             <Link href="/matches">
               <Button variant="link" className="text-primary pr-0" data-testid="button-view-all-matches">
-                View All <ChevronRight className="w-4 h-4 ml-1" />
+                Ver Todos <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           </div>
@@ -95,7 +95,7 @@ export function Dashboard() {
           <div className="grid sm:grid-cols-2 gap-4">
             {upcomingMatches.length === 0 ? (
               <div className="col-span-2 p-8 text-center text-muted-foreground bg-card rounded-xl border border-border">
-                No upcoming matches.
+                No hay partidos próximos.
               </div>
             ) : (
               upcomingMatches.slice(0, 4).map((match) => (
@@ -141,7 +141,7 @@ export function Dashboard() {
             <h2 className="text-xl font-bold uppercase tracking-tight">Top 5</h2>
             <Link href="/leaderboard">
               <Button variant="link" className="text-primary pr-0" data-testid="button-view-leaderboard">
-                Full <ChevronRight className="w-4 h-4 ml-1" />
+                Completa <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           </div>
@@ -149,7 +149,7 @@ export function Dashboard() {
           <Card className="bg-card border-border overflow-hidden">
             <div className="divide-y divide-border">
               {leaderboardPreview.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">No predictions yet.</div>
+                <div className="p-4 text-center text-muted-foreground text-sm">Sin pronósticos aún.</div>
               ) : (
                 leaderboardPreview.map((player) => (
                   <div key={player.userId} className={`flex items-center gap-3 p-3 ${player.userId === myStats.rank ? 'bg-primary/5' : ''}`}>

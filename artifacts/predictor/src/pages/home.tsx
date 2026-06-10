@@ -19,7 +19,7 @@ export function Home() {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/login">
-            <Button className="font-bold uppercase tracking-wider" data-testid="button-signup-nav">Join Now</Button>
+            <Button className="font-bold uppercase tracking-wider" data-testid="button-signup-nav">Únete Ahora</Button>
           </Link>
         </div>
       </header>
@@ -33,21 +33,21 @@ export function Home() {
           <div className="relative z-10 max-w-4xl mx-auto space-y-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              FIFA World Cup 2026
+              Copa Mundial 2026
             </div>
             
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] text-white">
-              PREDICT. <span className="text-primary">DOMINATE.</span> WIN.
+              PREDICE. <span className="text-primary">DOMINA.</span> GANA.
             </h1>
             
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The ultimate high-stakes prediction pool for the 2026 World Cup. Compete with friends, climb the leaderboard, and prove your football knowledge.
+              El pool de pronósticos definitivo para el Mundial 2026. Compite con amigos, escala la clasificación y demuestra tu conocimiento futbolístico.
             </p>
             
             <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/login">
                 <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg font-bold uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90" data-testid="button-signup-hero">
-                  Start Predicting
+                  Empieza a Pronosticar
                   <ChevronRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -62,22 +62,22 @@ export function Home() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <Globe className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold">104 Matches</h3>
-              <p className="text-muted-foreground leading-relaxed">Predict every single game of the expanded tournament format across USA, Mexico, and Canada.</p>
+              <h3 className="text-xl font-bold">104 Partidos</h3>
+              <p className="text-muted-foreground leading-relaxed">Pronostica cada partido del torneo expandido en USA, México y Canadá.</p>
             </div>
             <div className="p-8 rounded-2xl bg-background border border-border flex flex-col items-start gap-4">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <BarChart3 className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold">Live Scoring</h3>
-              <p className="text-muted-foreground leading-relaxed">Watch the leaderboard update in real-time as goals go in. Exact scores earn maximum points.</p>
+              <h3 className="text-xl font-bold">Puntaje en Vivo</h3>
+              <p className="text-muted-foreground leading-relaxed">La tabla se actualiza en tiempo real mientras caen los goles. Los resultados exactos dan puntos máximos.</p>
             </div>
             <div className="p-8 rounded-2xl bg-background border border-border flex flex-col items-start gap-4">
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <Clock className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold">Dynamic Deadlines</h3>
-              <p className="text-muted-foreground leading-relaxed">Submit or change your predictions right up until the referee blows the kickoff whistle.</p>
+              <h3 className="text-xl font-bold">Plazos Dinámicos</h3>
+              <p className="text-muted-foreground leading-relaxed">Envía o cambia tus pronósticos hasta que el árbitro pite el inicio del partido.</p>
             </div>
           </div>
         </section>
@@ -85,15 +85,15 @@ export function Home() {
         {/* Leaderboard Preview */}
         <section className="px-6 py-24 max-w-4xl mx-auto w-full">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase">Current Top 5</h2>
-            <p className="text-muted-foreground mt-2">The best predictors so far.</p>
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase">Top 5 Actual</h2>
+            <p className="text-muted-foreground mt-2">Los mejores pronosticadores hasta ahora.</p>
           </div>
           
           <div className="bg-card rounded-2xl border border-border overflow-hidden">
             {isLoading ? (
-              <div className="p-8 text-center text-muted-foreground">Loading standings...</div>
+              <div className="p-8 text-center text-muted-foreground">Cargando clasificación...</div>
             ) : topPlayers.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No predictions yet. Be the first!</div>
+              <div className="p-8 text-center text-muted-foreground">Sin pronósticos aún. ¡Sé el primero!</div>
             ) : (
               <div className="divide-y divide-border">
                 {topPlayers.map((player) => (
