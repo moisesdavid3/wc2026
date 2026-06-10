@@ -105,6 +105,8 @@ export function useListMatches(params?: { round?: string; group?: string }) {
       if (error) throw error;
       return (data ?? []).map(mapMatch);
     },
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -118,6 +120,8 @@ export function useGetMatch(id: number | string) {
       return mapMatch(data);
     },
     enabled: !!id,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -138,6 +142,8 @@ export function useGetBracket() {
       }
       return rounds.filter(r => byRound[r].length > 0).map(r => ({ round: r, matches: byRound[r] }));
     },
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -187,6 +193,8 @@ export function useGetGroups() {
         return { group: g, teams: groupTeams, matches: groupMatches, standings };
       });
     },
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -217,9 +225,11 @@ export function useGetLeaderboard() {
           exactPredictions: scoreMap[u.id]?.exact ?? 0,
           correctOutcomes: scoreMap[u.id]?.correct ?? 0,
         }))
-        .sort((a, b) => b.totalPoints - a.totalPoints)
-        .map((u, i) => ({ ...u, rank: i + 1 }));
+      .sort((a, b) => b.totalPoints - a.totalPoints)
+      .map((u, i) => ({ ...u, rank: i + 1 }));
     },
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -322,6 +332,8 @@ export function useGetDashboard() {
       };
     },
     enabled: !!userId,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -343,6 +355,8 @@ export function useListMyPredictions() {
       })) as Prediction[];
     },
     enabled: !!userId,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -400,13 +414,11 @@ export function useSetMatchResult() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ matchId, homeScore, awayScore }: { matchId: number; homeScore: number; awayScore: number }) => {
-      // Update match
       const { error: matchErr } = await supabase.from("matches")
         .update({ home_score: homeScore, away_score: awayScore, status: "completed" })
         .eq("id", matchId);
       if (matchErr) throw matchErr;
 
-      // Score predictions for this match
       const { data: preds } = await supabase.from("predictions")
         .select("id, home_score, away_score").eq("match_id", matchId);
 
@@ -419,10 +431,14 @@ export function useSetMatchResult() {
         await supabase.from("predictions").update({ points }).eq("id", p.id);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, { matchId }) => {
       qc.invalidateQueries({ queryKey: ["matches"] });
+      qc.invalidateQueries({ queryKey: ["match", matchId] });
+      qc.invalidateQueries({ queryKey: ["bracket"] });
+      qc.invalidateQueries({ queryKey: ["groups"] });
       qc.invalidateQueries({ queryKey: ["leaderboard"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["myPredictions"] });
     },
   });
 }
