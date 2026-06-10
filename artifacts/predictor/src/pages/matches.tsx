@@ -30,6 +30,7 @@ function formatCOT(utcString: string) {
 }
 
 export function Matches() {
+  const [filterPrediction, setFilterPrediction] = useState<string>("unpredicted");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterGroup, setFilterGroup] = useState<string>("all");
   const [scores, setScores] = useState<Record<number, { home: string; away: string }>>({});
@@ -89,8 +90,17 @@ export function Matches() {
   }
 
   let filtered = matches || [];
+  if (filterPrediction === "predicted") filtered = filtered.filter((m) => predictionMap.has(m.id));
+  if (filterPrediction === "unpredicted") filtered = filtered.filter((m) => !predictionMap.has(m.id));
   if (filterStatus !== "all") filtered = filtered.filter((m) => m.status === filterStatus);
   if (filterGroup !== "all") filtered = filtered.filter((m) => m.group === filterGroup);
+
+  // Hide knockout matches before group stage ends (June 28, 2026 Colombia)
+  const KNOCKOUT_CUTOFF = new Date("2026-06-28T00:00:00-05:00");
+  filtered = filtered.filter((m) => {
+    if (m.group) return true;
+    return new Date(m.matchDate).getTime() >= KNOCKOUT_CUTOFF.getTime();
+  });
 
   const groups = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 
@@ -100,6 +110,17 @@ export function Matches() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-black tracking-tight uppercase">Fixtures</h1>
         <div className="flex items-center gap-3">
+          <Select value={filterPrediction} onValueChange={setFilterPrediction}>
+            <SelectTrigger className="w-[160px] bg-card">
+              <SelectValue placeholder="Predicción" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="unpredicted">Sin pronosticar</SelectItem>
+              <SelectItem value="predicted">Pronosticados</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Select value={filterGroup} onValueChange={setFilterGroup}>
             <SelectTrigger className="w-[130px] bg-card">
               <SelectValue placeholder="Grupo" />
