@@ -1,4 +1,19 @@
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
+
+let etherealTransport: Transporter | null = null;
+let etherealUrl: ReturnType<typeof nodemailer.getTestMessageUrl> | null = null;
+
+async function getEtherealTransport() {
+  if (etherealTransport) return { transport: etherealTransport, url: etherealUrl };
+  const testAccount = await nodemailer.createTestAccount();
+  etherealTransport = nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    auth: { user: testAccount.user, pass: testAccount.pass },
+  });
+  return { transport: etherealTransport, url: etherealUrl };
+}
 
 function createTransport() {
   const host = process.env.SMTP_HOST;
@@ -7,7 +22,6 @@ function createTransport() {
   const port = parseInt(process.env.SMTP_PORT ?? "587", 10);
 
   if (!host || !user || !pass) {
-    // Ethereal test account fallback — logs preview URL to console
     return null;
   }
 
@@ -30,21 +44,20 @@ export async function sendMagicCode(to: string, code: string, appUrl: string) {
   `;
 
   if (!transport) {
-    // Dev mode: create a temporary Ethereal account and log the preview URL
-    const testAccount = await nodemailer.createTestAccount();
-    const devTransport = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-    const info = await devTransport.sendMail({
-      from: `"Predictor 26" <noreply@predictor26.com>`,
-      to,
-      subject: `Your login code: ${code}`,
-      html,
-    });
-    console.log(`\n📧 Magic code for ${to}: ${code}`);
-    console.log(`   Preview: ${nodemailer.getTestMessageUrl(info)}\n`);
+    const { transport: devTransport } = await getEtherealTransport();
+    try {
+      const info = await devTransport.sendMail({
+        from: `"Predictor 26" <noreply@predictor26.com>`,
+        to,
+        subject: `Your login code: ${code}`,
+        html,
+      });
+      console.log(`\n📧 Magic code for ${to}: ${code}`);
+      console.log(`   Preview: ${nodemailer.getTestMessageUrl(info)}\n`);
+    } catch {
+      console.log(`\n📧 Magic code for ${to}: ${code}`);
+      console.log(`   (Email delivery failed — code shown here instead)\n`);
+    }
     return;
   }
 
