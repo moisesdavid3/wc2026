@@ -1,14 +1,53 @@
-import { useGetMe, useGetMyStats, useListMyPredictions, useListMatches } from "@/lib/hooks";
+import { useRef, useState } from "react";
+import { useGetMe, useGetMyStats, useListMyPredictions, useListMatches, getStoredUserId } from "@/lib/hooks";
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy, CalendarDays, CheckCircle2, Target } from "lucide-react";
+import { Trophy, CalendarDays, CheckCircle2, Target, Camera, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function Profile() {
   const { data: user, isLoading: isLoadingUser } = useGetMe();
   const { data: stats, isLoading: isLoadingStats } = useGetMyStats();
   const { data: predictions, isLoading: isLoadingPreds } = useListMyPredictions();
   const { data: matches, isLoading: isLoadingMatches } = useListMatches();
+
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${user.id}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id);
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["me", getStoredUserId()] });
+    } catch (err: any) {
+      console.error("Error al subir avatar:", err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   if (isLoadingUser || isLoadingStats || isLoadingPreds || isLoadingMatches || !user || !stats) {
     return <div className="animate-pulse space-y-8">
@@ -29,10 +68,31 @@ export function Profile() {
         <div className="h-32 bg-gradient-to-r from-primary/20 to-background border-b border-border"></div>
         <CardContent className="px-8 pb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 -mt-16">
-            <Avatar className="w-32 h-32 border-4 border-card rounded-xl">
-              <AvatarImage src={user.avatarUrl || ''} />
-              <AvatarFallback className="text-4xl bg-primary/20 text-primary font-black">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="w-32 h-32 border-4 border-card rounded-xl">
+                <AvatarImage src={user.avatar_url || ''} />
+                <AvatarFallback className="text-4xl bg-primary/20 text-primary font-black">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer disabled:opacity-100"
+              >
+                {uploading ? (
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-8 h-8 text-white" />
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+            </div>
             <div className="flex-1 text-center sm:text-left mb-2">
               <h1 className="text-3xl font-black">{user.name}</h1>
               <p className="text-muted-foreground">{user.email}</p>
