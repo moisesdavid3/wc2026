@@ -220,8 +220,8 @@ export async function getNextPollDelay(): Promise<number> {
       const delay = 10 * 60 * 1000;
       if (delay < nextDelay) nextDelay = delay;
     } else {
-      // Future or in-progress → schedule shortly after estimated end
-      const delay = matchEnd - now + 10 * 60 * 1000;
+      // Future or in-progress → schedule exactly at estimated end
+      const delay = matchEnd - now;
       if (delay < nextDelay) nextDelay = delay;
     }
   }
