@@ -206,24 +206,26 @@ export async function getNextPollDelay(): Promise<number> {
     .from(matchesTable)
     .where(ne(matchesTable.status, "finished"));
 
+  if (unfinished.length === 0) return FALLBACK_DELAY_MS;
+
   const now = Date.now();
-  let nextDelay = FALLBACK_DELAY_MS;
+  let nextDelay = Infinity;
 
   for (const match of unfinished) {
     if (!match.matchDate) continue;
-    const matchStart = match.matchDate.getTime();
-    const matchEnd = matchStart + MATCH_DURATION_MS;
+    const matchEnd = match.matchDate.getTime() + MATCH_DURATION_MS;
 
-    if (now < matchStart) {
-      const delay = matchEnd - now + 10 * 60 * 1000;
-      if (delay < nextDelay) nextDelay = delay;
-    } else if (now < matchEnd) {
-      const delay = matchEnd - now + 5 * 60 * 1000;
+    if (now >= matchEnd) {
+      // Past estimated end but no result yet → retry in 10 min
+      const delay = 10 * 60 * 1000;
       if (delay < nextDelay) nextDelay = delay;
     } else {
-      if (10 * 60 * 1000 < nextDelay) nextDelay = 10 * 60 * 1000;
+      // Future or in-progress → schedule shortly after estimated end
+      const delay = matchEnd - now + 10 * 60 * 1000;
+      if (delay < nextDelay) nextDelay = delay;
     }
   }
 
+  // Past matches always get 10-min retry; otherwise use calculated delay
   return Math.max(nextDelay, MIN_DELAY_MS);
 }
