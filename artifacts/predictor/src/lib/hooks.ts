@@ -286,11 +286,13 @@ export function useGetDashboard() {
     queryKey: ["dashboard", userId],
     queryFn: async () => {
       const now = new Date().toISOString();
-      const [meRes, upcomingRes, allMatchesRes, lbRes, predsRes] = await Promise.all([
+      const [meRes, upcomingRes, liveRes, allMatchesRes, lbRes, predsRes] = await Promise.all([
         supabase.from("users").select("*").eq("id", userId!).single(),
         supabase.from("matches").select(MATCH_SELECT)
           .eq("status", "upcoming").gte("match_date", now)
           .order("match_date").limit(5),
+        supabase.from("matches").select(MATCH_SELECT)
+          .eq("status", "live").order("match_date"),
         supabase.from("matches").select("id, status, round"),
         supabase.from("predictions").select("user_id, points").not("points", "is", null),
         supabase.from("predictions").select("*").eq("user_id", userId!),
@@ -327,6 +329,7 @@ export function useGetDashboard() {
         user: me,
         myStats: { totalPoints, exactPredictions: exact, correctOutcomes: correct, rank },
         upcomingMatches: (upcomingRes.data ?? []).map(mapMatch),
+        liveMatches: (liveRes.data ?? []).map(mapMatch),
         leaderboardPreview,
         tournamentProgress: { currentRound, finishedMatches: finished, totalMatches: allMatches.length },
       };

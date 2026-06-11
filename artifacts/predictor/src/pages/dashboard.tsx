@@ -1,6 +1,6 @@
 import { useGetDashboard } from "@/lib/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Target, CheckCircle2, TrendingUp, ChevronRight } from "lucide-react";
+import { Trophy, Target, CheckCircle2, TrendingUp, ChevronRight, Radio } from "lucide-react";
 import { Countdown } from "@/components/countdown";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export function Dashboard() {
     );
   }
 
-  const { myStats, upcomingMatches, leaderboardPreview, tournamentProgress } = dashboard;
+  const { myStats, upcomingMatches, liveMatches, leaderboardPreview, tournamentProgress } = dashboard;
 
   return (
     <div className="space-y-8">
@@ -79,6 +79,43 @@ export function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Matches */}
+      {liveMatches.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Radio className="w-5 h-5 text-[#CE1126] animate-pulse" />
+            <h2 className="text-xl font-bold uppercase tracking-tight text-[#CE1126]">En Vivo</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {liveMatches.map((match) => (
+              <Link key={match.id} href={`/matches/${match.id}`}>
+                <Card className="bg-card border-[#CE1126]/50 hover:border-[#CE1126] transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center mb-3 text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                      <span>{match.group || match.round}</span>
+                      <span className="text-[#CE1126] animate-pulse">EN VIVO</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{match.homeTeam?.flag}</span>
+                        <span className="font-bold">{match.homeTeam?.code}</span>
+                      </div>
+                      <div className="text-xl font-black font-mono text-primary">
+                        {match.homeScore} – {match.awayScore}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">{match.awayTeam?.code}</span>
+                        <span className="text-lg">{match.awayTeam?.flag}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Upcoming Matches */}
