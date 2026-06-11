@@ -1,22 +1,13 @@
-import { db, matchesTable, predictionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, matchesTable, predictionsTable, teamsTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { calculatePoints } from "./scoring";
 import { logger } from "./logger";
 
-const API_BASE = "https://worldcup26.ir";
+const API_BASE = "https://v3.football.api-sports.io";
+const LEAGUE_ID = 1;
+const SEASON = 2026;
 
-type ApiGame = {
-  id: string;
-  home_team_id: string;
-  away_team_id: string;
-  home_score: string;
-  away_score: string;
-  finished: string;
-  time_elapsed: string;
-  type: string;
-  home_team_name_en: string;
-  away_team_name_en: string;
-};
+const FINISHED_STATUSES = new Set(["FT", "AET", "PEN"]);
 
 type SyncResult = {
   updated: number;
@@ -24,41 +15,108 @@ type SyncResult = {
   skipped: number;
 };
 
-function parseScore(val: string): number | null {
-  const n = parseInt(val, 10);
-  return isNaN(n) ? null : n;
+type ApiTeam = {
+  team: {
+    id: number;
+    name: string;
+    code: string;
+  };
+};
+
+type ApiFixture = {
+  fixture: {
+    id: number;
+    date: string;
+    status: { short: string };
+  };
+  teams: {
+    home: { id: number; name: string };
+    away: { id: number; name: string };
+  };
+  goals: {
+    home: number | null;
+    away: number | null;
+  };
+};
+
+let teamCodeCache: Map<number, string> | null = null;
+
+function getApiKey(): string {
+  const key = process.env["API_FOOTBALL_KEY"];
+  if (!key) throw new Error("API_FOOTBALL_KEY environment variable is required");
+  return key;
+}
+
+async function apiFetch<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { "x-apisports-key": getApiKey() },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`API-Football responded with ${res.status}: ${text}`);
+  }
+  const data = await res.json();
+  return data.response as T;
+}
+
+async function buildTeamCodeMap(): Promise<Map<number, string>> {
+  if (teamCodeCache) return teamCodeCache;
+
+  const teams = await apiFetch<ApiTeam[]>(`/teams?league=${LEAGUE_ID}&season=${SEASON}`);
+  const map = new Map<number, string>();
+
+  for (const entry of teams) {
+    const code = entry.team.code?.trim();
+    if (code && code.length > 0) {
+      map.set(entry.team.id, code);
+    }
+  }
+
+  teamCodeCache = map;
+  logger.info({ teamCount: map.size }, "Team code map built");
+  return map;
+}
+
+function isFinished(status: string): boolean {
+  return FINISHED_STATUSES.has(status);
 }
 
 export async function syncResultsFromApi(): Promise<SyncResult> {
   const result: SyncResult = { updated: 0, errors: 0, skipped: 0 };
 
   try {
-    const res = await fetch(`${API_BASE}/get/games`);
-    if (!res.ok) {
-      throw new Error(`API responded with ${res.status}`);
+    const [teamCodeMap, fixtures] = await Promise.all([
+      buildTeamCodeMap(),
+      apiFetch<ApiFixture[]>(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`),
+    ]);
+
+    logger.info({ totalFixtures: fixtures.length }, "Fetched fixtures from API-Football");
+
+    const teamByCode = new Map<string, typeof teamsTable.$inferSelect>();
+    const dbTeams = await db.select().from(teamsTable);
+    for (const t of dbTeams) {
+      teamByCode.set(t.code, t);
     }
 
-    const data = (await res.json()) as { games: ApiGame[] };
-    const games = data.games;
+    for (const fixture of fixtures) {
+      const status = fixture.fixture.status.short;
+      if (!isFinished(status)) continue;
 
-    logger.info({ totalGames: games.length }, "Fetched games from API");
+      const homeScore = fixture.goals.home;
+      const awayScore = fixture.goals.away;
+      if (homeScore === null || awayScore === null) continue;
 
-    for (const game of games) {
-      const matchNumber = parseInt(game.id, 10);
-      if (isNaN(matchNumber)) {
+      const homeCode = teamCodeMap.get(fixture.teams.home.id);
+      const awayCode = teamCodeMap.get(fixture.teams.away.id);
+      if (!homeCode || !awayCode) {
         result.skipped++;
         continue;
       }
 
-      const isFinished = game.finished === "TRUE" || game.time_elapsed === "finished";
-      if (!isFinished) {
-        continue;
-      }
-
-      const homeScore = parseScore(game.home_score);
-      const awayScore = parseScore(game.away_score);
-
-      if (homeScore === null || awayScore === null) {
+      const homeTeam = teamByCode.get(homeCode);
+      const awayTeam = teamByCode.get(awayCode);
+      if (!homeTeam || !awayTeam) {
+        result.skipped++;
         continue;
       }
 
@@ -66,11 +124,19 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
         const [match] = await db
           .select()
           .from(matchesTable)
-          .where(eq(matchesTable.matchNumber, matchNumber))
+          .where(
+            and(
+              eq(matchesTable.homeTeamId, homeTeam.id),
+              eq(matchesTable.awayTeamId, awayTeam.id),
+            ),
+          )
           .limit(1);
 
         if (!match) {
-          logger.warn({ matchNumber }, "Match not found in database");
+          logger.warn(
+            { homeTeam: homeTeam.name, awayTeam: awayTeam.name },
+            "Match not found in database",
+          );
           result.skipped++;
           continue;
         }
@@ -103,17 +169,27 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
         }
 
         logger.info(
-          { matchNumber, homeScore, awayScore, predictionsRecalculated: preds.length },
-          "Match result synced",
+          {
+            matchNumber: match.matchNumber,
+            homeTeam: homeTeam.name,
+            awayTeam: awayTeam.name,
+            homeScore,
+            awayScore,
+            predictionsRecalculated: preds.length,
+          },
+          "Match result synced from API-Football",
         );
         result.updated++;
       } catch (err) {
-        logger.error({ err, matchNumber }, "Error syncing match");
+        logger.error(
+          { err, homeTeam: homeTeam.name, awayTeam: awayTeam.name },
+          "Error syncing match",
+        );
         result.errors++;
       }
     }
   } catch (err) {
-    logger.error({ err }, "Error fetching API");
+    logger.error({ err }, "Error fetching from API-Football");
     result.errors++;
   }
 
