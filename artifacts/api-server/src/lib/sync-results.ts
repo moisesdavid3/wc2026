@@ -1,5 +1,5 @@
 import { db, matchesTable, predictionsTable, teamsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { calculatePoints } from "./scoring";
 import { logger } from "./logger";
 
@@ -194,4 +194,36 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
   }
 
   return result;
+}
+
+const MATCH_DURATION_MS = 2.5 * 60 * 60 * 1000;
+const FALLBACK_DELAY_MS = 30 * 60 * 1000;
+const MIN_DELAY_MS = 60 * 1000;
+
+export async function getNextPollDelay(): Promise<number> {
+  const unfinished = await db
+    .select({ matchDate: matchesTable.matchDate })
+    .from(matchesTable)
+    .where(ne(matchesTable.status, "finished"));
+
+  const now = Date.now();
+  let nextDelay = FALLBACK_DELAY_MS;
+
+  for (const match of unfinished) {
+    if (!match.matchDate) continue;
+    const matchStart = match.matchDate.getTime();
+    const matchEnd = matchStart + MATCH_DURATION_MS;
+
+    if (now < matchStart) {
+      const delay = matchEnd - now + 10 * 60 * 1000;
+      if (delay < nextDelay) nextDelay = delay;
+    } else if (now < matchEnd) {
+      const delay = matchEnd - now + 5 * 60 * 1000;
+      if (delay < nextDelay) nextDelay = delay;
+    } else {
+      if (10 * 60 * 1000 < nextDelay) nextDelay = 10 * 60 * 1000;
+    }
+  }
+
+  return Math.max(nextDelay, MIN_DELAY_MS);
 }

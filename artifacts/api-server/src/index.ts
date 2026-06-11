@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { syncResultsFromApi } from "./lib/sync-results";
+import { syncResultsFromApi, getNextPollDelay } from "./lib/sync-results";
 
 const rawPort = process.env["PORT"];
 
@@ -24,19 +24,30 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  // Auto-sync match results from API-Football every 15 minutes
-  // (100 req/day limit on free plan → ~96 req/day at this interval)
+  // Smart polling: sync based on match schedules, not a fixed interval
+  // Only polls around match end times, respecting the 100 req/day free limit
   if (!process.env["API_FOOTBALL_KEY"]) {
     logger.warn("API_FOOTBALL_KEY not set — match auto-sync disabled");
   } else {
-    const SYNC_INTERVAL_MS = 15 * 60 * 1000;
-    logger.info({ intervalMs: SYNC_INTERVAL_MS }, "Starting match results sync interval");
-    setInterval(() => {
-      syncResultsFromApi().catch((err) => logger.error({ err }, "Auto-sync failed"));
-    }, SYNC_INTERVAL_MS);
+    async function scheduleSync() {
+      try {
+        const result = await syncResultsFromApi();
+        logger.info({ updated: result.updated, errors: result.errors }, "Sync cycle complete");
+      } catch (err) {
+        logger.error({ err }, "Auto-sync failed");
+      }
 
-    setTimeout(() => {
-      syncResultsFromApi().catch((err) => logger.error({ err }, "Initial sync failed"));
-    }, 10_000);
+      try {
+        const delay = await getNextPollDelay();
+        logger.info({ nextPollSec: Math.round(delay / 1000) }, "Next sync scheduled");
+        setTimeout(scheduleSync, delay);
+      } catch (err) {
+        logger.error({ err }, "Failed to calculate next poll, falling back to 30 min");
+        setTimeout(scheduleSync, 30 * 60 * 1000);
+      }
+    }
+
+    // Initial sync shortly after startup
+    setTimeout(scheduleSync, 10_000);
   }
 });
