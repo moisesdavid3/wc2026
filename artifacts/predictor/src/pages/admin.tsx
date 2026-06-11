@@ -45,11 +45,9 @@ export function Admin() {
     if (!s || !s.home || !s.away) return;
 
     setMatchResult.mutate({
-      id: matchId,
-      data: {
-        homeScore: parseInt(s.home),
-        awayScore: parseInt(s.away)
-      }
+      matchId,
+      homeScore: parseInt(s.home),
+      awayScore: parseInt(s.away)
     }, {
       onSuccess: () => {
         toast({ title: "Guardado" });

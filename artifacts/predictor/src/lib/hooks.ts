@@ -214,8 +214,8 @@ export function useGetLeaderboard() {
       for (const p of preds ?? []) {
         if (!scoreMap[p.user_id]) continue;
         scoreMap[p.user_id].total += p.points ?? 0;
-        if (p.points === 3) scoreMap[p.user_id].exact++;
-        else if (p.points === 1) scoreMap[p.user_id].correct++;
+        if (p.points === 5) scoreMap[p.user_id].exact++;
+        else if (p.points === 4 || p.points === 3) scoreMap[p.user_id].correct++;
       }
 
       return (users ?? [])
@@ -261,8 +261,8 @@ export function useGetMyStats() {
       ]);
       const totalPredictions = (allPreds ?? []).length;
       const total = (scoredPreds ?? []).reduce((s: number, p: any) => s + (p.points ?? 0), 0);
-      const exact = (scoredPreds ?? []).filter((p: any) => p.points === 3).length;
-      const correct = (scoredPreds ?? []).filter((p: any) => p.points === 1).length;
+      const exact = (scoredPreds ?? []).filter((p: any) => p.points === 5).length;
+      const correct = (scoredPreds ?? []).filter((p: any) => p.points === 4 || p.points === 3).length;
 
       // rank
       const lb = await supabase.from("predictions")
@@ -320,8 +320,8 @@ export function useGetDashboard() {
       // my stats
       const myPreds = predsRes.data ?? [];
       const totalPoints = myPreds.reduce((s: number, p: any) => s + (p.points ?? 0), 0);
-      const exact = myPreds.filter((p: any) => p.points === 3).length;
-      const correct = myPreds.filter((p: any) => p.points === 1).length;
+      const exact = myPreds.filter((p: any) => p.points === 5).length;
+      const correct = myPreds.filter((p: any) => p.points === 4 || p.points === 3).length;
       const allScores = Object.values(scoreMap).sort((a, b) => b - a);
       const rank = allScores.findIndex(s => s <= totalPoints) + 1 || 1;
 
@@ -425,12 +425,20 @@ export function useSetMatchResult() {
       const { data: preds } = await supabase.from("predictions")
         .select("id, home_score, away_score").eq("match_id", matchId);
 
-      const homeOutcome = homeScore > awayScore ? "H" : homeScore < awayScore ? "A" : "D";
       for (const p of preds ?? []) {
-        const predOutcome = p.home_score > p.away_score ? "H" : p.home_score < p.away_score ? "A" : "D";
-        let points = 0;
-        if (p.home_score === homeScore && p.away_score === awayScore) points = 3;
-        else if (predOutcome === homeOutcome) points = 1;
+        const exact = p.home_score === homeScore && p.away_score === awayScore;
+        let points = exact ? 5 : 0;
+
+        if (!exact) {
+          const predOutcome = Math.sign(p.home_score - p.away_score);
+          const actualOutcome = Math.sign(homeScore - awayScore);
+          if (predOutcome === actualOutcome) points += 3;
+        }
+
+        if (!exact && Math.abs(p.home_score - p.away_score) === Math.abs(homeScore - awayScore)) {
+          points += 1;
+        }
+
         await supabase.from("predictions").update({ points }).eq("id", p.id);
       }
     },
