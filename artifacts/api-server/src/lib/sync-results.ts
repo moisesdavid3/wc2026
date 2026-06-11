@@ -196,7 +196,7 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
   return result;
 }
 
-const MATCH_DURATION_MS = 2.5 * 60 * 60 * 1000;
+const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
 const FALLBACK_DELAY_MS = 30 * 60 * 1000;
 const MIN_DELAY_MS = 60 * 1000;
 
