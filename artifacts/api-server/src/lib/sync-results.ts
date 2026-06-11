@@ -55,8 +55,8 @@ async function apiFetch<T>(path: string): Promise<T> {
     const text = await res.text().catch(() => "");
     throw new Error(`API-Football responded with ${res.status}: ${text}`);
   }
-  const data = await res.json();
-  return data.response as T;
+  const data = (await res.json()) as { response: T };
+  return data.response;
 }
 
 async function buildTeamCodeMap(): Promise<Map<number, string>> {
