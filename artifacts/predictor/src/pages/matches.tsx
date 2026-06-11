@@ -32,7 +32,7 @@ function formatCOT(utcString: string) {
 export function Matches() {
   const [filterPrediction, setFilterPrediction] = useState<string>("unpredicted");
   const [filterStatus, setFilterStatus] = useState<string>("upcoming");
-  const [filterGroup, setFilterGroup] = useState<string>("all");
+
   const [scores, setScores] = useState<Record<number, { home: string; away: string }>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
 
@@ -93,7 +93,6 @@ export function Matches() {
   if (filterPrediction === "predicted") filtered = filtered.filter((m) => predictionMap.has(m.id));
   if (filterPrediction === "unpredicted") filtered = filtered.filter((m) => !predictionMap.has(m.id));
   if (filterStatus !== "all") filtered = filtered.filter((m) => m.status === filterStatus);
-  if (filterGroup !== "all") filtered = filtered.filter((m) => m.group === filterGroup);
 
   // Hide all knockout matches until group stage ends (June 28, 2026 Colombia)
   const KNOCKOUT_CUTOFF = new Date("2026-06-28T00:00:00-05:00");
@@ -101,7 +100,6 @@ export function Matches() {
     filtered = filtered.filter((m) => m.group);
   }
 
-  const groups = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 
   return (
     <div className="space-y-6">
@@ -117,18 +115,6 @@ export function Matches() {
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="unpredicted">Sin pronosticar</SelectItem>
               <SelectItem value="predicted">Pronosticados</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={filterGroup} onValueChange={setFilterGroup}>
-            <SelectTrigger className="w-[160px] bg-card">
-              <SelectValue placeholder="Grupo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los grupos</SelectItem>
-              {groups.map((g) => (
-                <SelectItem key={g} value={g}>Grupo {g}</SelectItem>
-              ))}
             </SelectContent>
           </Select>
 
