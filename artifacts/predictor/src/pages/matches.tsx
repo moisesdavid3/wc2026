@@ -92,7 +92,9 @@ export function Matches() {
   let filtered = matches || [];
   if (filterPrediction === "predicted") filtered = filtered.filter((m) => predictionMap.has(m.id));
   if (filterPrediction === "unpredicted") filtered = filtered.filter((m) => !predictionMap.has(m.id));
-  if (filterStatus !== "all") filtered = filtered.filter((m) => m.status === filterStatus);
+  if (filterStatus !== "all") {
+    filtered = filtered.filter((m) => filterStatus === "finished" ? (m.status === "finished" || m.status === "completed") : m.status === filterStatus);
+  }
 
   // Hide all knockout matches until group stage ends (June 28, 2026 Colombia)
   const KNOCKOUT_CUTOFF = new Date("2026-06-28T00:00:00-05:00");
@@ -143,7 +145,7 @@ export function Matches() {
             const prediction = predictionMap.get(match.id);
             const isUpcoming = match.status === "upcoming";
             const isLive = match.status === "live";
-            const isFinished = match.status === "finished";
+            const isFinished = match.status === "finished" || match.status === "completed";
             const isLockedSoon = isUpcoming && (new Date(match.matchDate).getTime() - Date.now()) < 60 * 60 * 1000;
             const isLocked = isFinished || isLive || isLockedSoon;
             const cot = formatCOT(match.matchDate);
@@ -190,7 +192,9 @@ export function Matches() {
                         </span>
                       )}
                       {isFinished && (
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Finalizado</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase mt-1">
+                          <Check className="w-3 h-3" />Finalizado
+                        </span>
                       )}
                     </div>
 

@@ -109,6 +109,7 @@ export function Admin() {
                       className="w-16 text-center font-mono font-black"
                       value={scores[match.id]?.home ?? ''}
                       onChange={e => handleScoreChange(match.id, 'home', e.target.value)}
+                      disabled={match.status === "completed"}
                     />
                     <span className="font-black">-</span>
                     <Input 
@@ -117,6 +118,7 @@ export function Admin() {
                       className="w-16 text-center font-mono font-black"
                       value={scores[match.id]?.away ?? ''}
                       onChange={e => handleScoreChange(match.id, 'away', e.target.value)}
+                      disabled={match.status === "completed"}
                     />
                   </div>
                   
@@ -130,9 +132,9 @@ export function Admin() {
                   className="w-full" 
                   variant="outline" 
                   onClick={() => handleSaveResult(match.id)}
-                  disabled={!scores[match.id]?.home || !scores[match.id]?.away}
+                  disabled={match.status === "completed" || !scores[match.id]?.home || !scores[match.id]?.away}
                 >
-                  Resultado Oficial
+                  {match.status === "completed" ? "Completado" : "Resultado Oficial"}
                 </Button>
               </div>
             ))}

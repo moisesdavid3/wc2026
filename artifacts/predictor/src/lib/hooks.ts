@@ -406,6 +406,10 @@ export function useUpsertPrediction() {
   return useMutation({
     mutationFn: async (vars: { matchId: number; homeScore: number; awayScore: number } | { data: { matchId: number; homeScore: number; awayScore: number } }) => {
       const v = "data" in vars ? vars.data : vars;
+      const { data: match } = await supabase.from("matches").select("status").eq("id", v.matchId).single();
+      if (match && (match.status === "completed" || match.status === "finished")) {
+        throw new Error("Este partido ya finalizó, no puedes pronosticar");
+      }
       const { data, error } = await supabase.from("predictions")
         .upsert({ user_id: userId!, match_id: v.matchId, home_score: v.homeScore, away_score: v.awayScore },
           { onConflict: "user_id,match_id" })
@@ -454,6 +458,10 @@ export function useSetMatchResult() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ matchId, homeScore, awayScore }: { matchId: number; homeScore: number; awayScore: number }) => {
+      const { data: existing } = await supabase.from("matches").select("status").eq("id", matchId).single();
+      if (existing && existing.status === "completed") {
+        throw new Error("Este partido ya tiene un resultado oficial");
+      }
       const { error: matchErr } = await supabase.from("matches")
         .update({ home_score: homeScore, away_score: awayScore, status: "completed" })
         .eq("id", matchId);
