@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/auth";
 import { calculatePoints } from "../lib/scoring";
+import { syncResultsFromApi } from "../lib/sync-results";
 
 const router: IRouter = Router();
 
@@ -93,6 +94,11 @@ router.patch("/admin/users/:id/role", requireAdmin, async (req, res): Promise<vo
   }
 
   res.json(UpdateUserRoleResponse.parse({ ...user, createdAt: user.createdAt.toISOString() }));
+});
+
+router.post("/admin/sync-results", requireAdmin, async (_req, res): Promise<void> => {
+  const result = await syncResultsFromApi();
+  res.json(result);
 });
 
 export default router;
