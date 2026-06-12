@@ -499,6 +499,20 @@ export function useSetMatchResult() {
   });
 }
 
+export function useUpdateMatchStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ matchId, status }: { matchId: number; status: string }) => {
+      const { error } = await supabase.from("matches").update({ status }).eq("id", matchId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["matches"] });
+      qc.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+}
+
 // Alias for backwards compatibility with pages
 export const useListGroups = useGetGroups;
 

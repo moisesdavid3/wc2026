@@ -27,7 +27,7 @@ export function Dashboard() {
     );
   }
 
-  const { myStats, upcomingMatches, leaderboardPreview, tournamentProgress } = dashboard;
+  const { myStats, upcomingMatches, liveMatches, leaderboardPreview, tournamentProgress } = dashboard;
 
   return (
     <div className="space-y-8">
@@ -38,6 +38,37 @@ export function Dashboard() {
           {tournamentProgress.currentRound} • {tournamentProgress.finishedMatches} / {tournamentProgress.totalMatches} Partidos Jugados
         </p>
       </div>
+
+      {/* Live matches */}
+      {liveMatches.length > 0 && (
+        <div>
+          <h2 className="text-lg font-black uppercase tracking-widest text-[#CE1126] mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#CE1126] rounded-full animate-pulse" />
+            En Vivo
+          </h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {liveMatches.map(match => (
+              <Card key={match.id} className="bg-card border-[#CE1126]/30 border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 w-[38%] justify-end">
+                      <span className="font-bold text-sm truncate">{match.homeTeam?.code}</span>
+                      <span className="text-xl">{match.homeTeam?.flag}</span>
+                    </div>
+                    <div className="flex flex-col items-center w-[24%]">
+                      <div className="text-xl font-black font-mono">{match.homeScore ?? '-'} – {match.awayScore ?? '-'}</div>
+                    </div>
+                    <div className="flex items-center gap-2 w-[38%] justify-start">
+                      <span className="text-xl">{match.awayTeam?.flag}</span>
+                      <span className="font-bold text-sm truncate">{match.awayTeam?.code}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

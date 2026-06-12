@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useListOrganizations, useUpdateUserRole, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
+import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useListOrganizations, useUpdateUserRole, useUpdateMatchStatus, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export function Admin() {
   
   const setMatchResult = useSetMatchResult();
   const updateUserRole = useUpdateUserRole();
+  const updateMatchStatus = useUpdateMatchStatus();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,6 +61,17 @@ export function Admin() {
     });
   };
 
+  const handleStatusChange = (matchId: number, status: string) => {
+    updateMatchStatus.mutate({ matchId, status }, {
+      onSuccess: () => {
+        toast({ title: `Estado actualizado a ${status}` });
+      },
+      onError: () => {
+        toast({ title: "Error al actualizar estado", variant: "destructive" });
+      },
+    });
+  };
+
   const handleRoleChange = (userId: number, role: 'user' | 'admin') => {
     updateUserRole.mutate({
       id: userId,
@@ -93,7 +105,16 @@ export function Admin() {
               <div key={match.id} className="p-4 border border-border rounded-lg bg-background space-y-4">
                 <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase">
                   <span>{match.group || match.round}</span>
-                  <span>{match.status}</span>
+                  <Select value={match.status} onValueChange={(val) => handleStatusChange(match.id, val)} disabled={match.status === "completed"}>
+                    <SelectTrigger className="w-[130px] h-7 text-xs bg-background border-border">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="upcoming">Por jugar</SelectItem>
+                      <SelectItem value="live">En vivo</SelectItem>
+                      <SelectItem value="completed">Completado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="flex items-center gap-4">
