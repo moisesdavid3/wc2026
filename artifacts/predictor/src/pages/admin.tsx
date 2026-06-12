@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useUpdateUserRole, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
+import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useListOrganizations, useUpdateUserRole, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ export function Admin() {
   const { data: user, isLoading: isLoadingUser } = useGetMe();
   const { data: matches, isLoading: isLoadingMatches } = useListMatches();
   const { data: users, isLoading: isLoadingUsers } = useListUsers();
+  const { data: organizations } = useListOrganizations();
   
   const setMatchResult = useSetMatchResult();
   const updateUserRole = useUpdateUserRole();
@@ -150,6 +151,9 @@ export function Admin() {
                   <div>
                     <div className="font-bold">{u.name}</div>
                     <div className="text-sm text-muted-foreground">{u.email}</div>
+                    <div className="text-xs text-muted-foreground/60">
+                      {organizations?.find(o => o.id === u.organization_id)?.name ?? '—'}
+                    </div>
                   </div>
                   <Select 
                     value={u.role} 

@@ -31,14 +31,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex-1 bg-[#003893]" />
           <div className="flex-1 bg-[#CE1126]" />
         </div>
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-primary" />
-            <span className="font-bold tracking-tight">Predictor 26</span>
-          </div>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => clearUserId()} data-testid="mobile-button-logout">
-            <LogOut className="w-5 h-5" />
-          </Button>
+        <div className="flex items-center gap-2 p-4">
+          <Trophy className="w-6 h-6 text-primary" />
+          <span className="font-bold tracking-tight">Predictor 26</span>
         </div>
       </header>
 
@@ -75,16 +70,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={() => clearUserId()} data-testid="button-logout">
-            <LogOut className="w-5 h-5 mr-3" />
-            Cerrar Sesión
-          </Button>
-        </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 pb-20 md:pb-0 overflow-y-auto">
+      <main className="flex-1 pb-20 md:pb-0 overflow-y-auto relative">
+        <Button variant="ghost" size="icon" className="fixed top-4 right-4 z-50 text-muted-foreground hover:text-foreground bg-background/80 backdrop-blur-sm rounded-full" onClick={() => clearUserId()} data-testid="logout-button">
+          <LogOut className="w-5 h-5" />
+        </Button>
         <div className="max-w-5xl mx-auto p-4 md:p-8">
           {children}
         </div>

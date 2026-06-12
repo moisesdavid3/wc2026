@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserContext } from "@/contexts/user";
-import { signIn, signUp } from "@/lib/hooks";
+import { signIn, signUp, useListOrganizations } from "@/lib/hooks";
 
 export function Login() {
   const { setUserId } = useUserContext();
+  const { data: organizations } = useListOrganizations();
 
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
@@ -20,6 +22,7 @@ export function Login() {
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
   const [signUpConfirm, setSignUpConfirm] = useState("");
+  const [signUpOrg, setSignUpOrg] = useState<string>("");
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const [signUpLoading, setSignUpLoading] = useState(false);
 
@@ -48,9 +51,13 @@ export function Login() {
       setSignUpError("Mínimo 6 caracteres");
       return;
     }
+    if (!signUpOrg) {
+      setSignUpError("Selecciona una organización");
+      return;
+    }
     setSignUpLoading(true);
     try {
-      const user = await signUp(signUpName, signUpEmail, signUpPassword);
+      const user = await signUp(signUpName, signUpEmail, signUpPassword, parseInt(signUpOrg));
       setUserId(user.id);
     } catch (err: any) {
       setSignUpError(err.message ?? "No se pudo crear la cuenta");
@@ -113,6 +120,23 @@ export function Login() {
                     <Input id="su-email" type="email" placeholder="tu@ejemplo.com"
                       value={signUpEmail} onChange={e => setSignUpEmail(e.target.value)}
                       required disabled={signUpLoading} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="su-org">Organización</Label>
+                    {organizations && organizations.length > 0 ? (
+                      <Select value={signUpOrg} onValueChange={setSignUpOrg}>
+                        <SelectTrigger id="su-org" className="bg-background border-border">
+                          <SelectValue placeholder="Selecciona una organización" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizations.map((org) => (
+                            <SelectItem key={org.id} value={String(org.id)}>{org.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input value="" disabled placeholder="Cargando..." />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="su-password">Contraseña</Label>

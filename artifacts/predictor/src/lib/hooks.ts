@@ -23,6 +23,11 @@ export type Match = {
 export type User = {
   id: number; name: string; email: string;
   avatar_url: string | null; role: string; created_at: string;
+  organization_id: number | null;
+};
+
+export type Organization = {
+  id: number; name: string; created_at: string;
 };
 
 export type Prediction = {
@@ -48,12 +53,13 @@ export function getStoredUserId(): number | null {
 export function storeUserId(id: number) { localStorage.setItem(USER_KEY, String(id)); }
 export function clearStoredUserId() { localStorage.removeItem(USER_KEY); }
 
-export async function signUp(name: string, email: string, password: string): Promise<User> {
+export async function signUp(name: string, email: string, password: string, organizationId?: number): Promise<User> {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
-  // Insert into our users table
+  const insertData: any = { name: name.trim(), email: email.trim().toLowerCase() };
+  if (organizationId) insertData.organization_id = organizationId;
   const { data: user, error: userError } = await supabase
-    .from("users").insert({ name: name.trim(), email: email.trim().toLowerCase() })
+    .from("users").insert(insertData)
     .select().single();
   if (userError) throw userError;
   return user as User;
@@ -200,11 +206,13 @@ export function useGetGroups() {
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
 
-export function useGetLeaderboard() {
+export function useGetLeaderboard(organizationId?: number | null) {
   return useQuery({
-    queryKey: ["leaderboard"],
+    queryKey: ["leaderboard", organizationId],
     queryFn: async () => {
-      const { data: users, error } = await supabase.from("users").select("*");
+      let usersQuery = supabase.from("users").select("*");
+      if (organizationId) usersQuery = usersQuery.eq("organization_id", organizationId);
+      const { data: users, error } = await usersQuery;
       if (error) throw error;
       const { data: preds } = await supabase
         .from("predictions").select("user_id, points").not("points", "is", null);
@@ -249,10 +257,10 @@ export function useGetMe() {
   });
 }
 
-export function useGetMyStats() {
+export function useGetMyStats(organizationId?: number | null) {
   const userId = getStoredUserId();
   return useQuery({
-    queryKey: ["myStats", userId],
+    queryKey: ["myStats", userId, organizationId],
     queryFn: async () => {
       if (!userId) return null;
       const [{ data: allPreds }, { data: scoredPreds }] = await Promise.all([
@@ -264,11 +272,19 @@ export function useGetMyStats() {
       const exact = (scoredPreds ?? []).filter((p: any) => p.points === 5).length;
       const correct = (scoredPreds ?? []).filter((p: any) => p.points === 4 || p.points === 3).length;
 
-      // rank
+      // rank scoped to organization
+      let usersQuery = supabase.from("users").select("id");
+      if (organizationId) usersQuery = usersQuery.eq("organization_id", organizationId);
+      const { data: orgUsers } = await usersQuery;
+      const userIds = new Set((orgUsers ?? []).map((u: any) => u.id));
+
       const lb = await supabase.from("predictions")
         .select("user_id, points").not("points", "is", null);
       const scores: Record<number, number> = {};
-      for (const p of lb.data ?? []) scores[p.user_id] = (scores[p.user_id] ?? 0) + (p.points ?? 0);
+      for (const p of lb.data ?? []) {
+        if (!userIds.has(p.user_id)) continue;
+        scores[p.user_id] = (scores[p.user_id] ?? 0) + (p.points ?? 0);
+      }
       const sorted = Object.values(scores).sort((a, b) => b - a);
       const rank = sorted.findIndex(s => s <= total) + 1;
 
@@ -307,11 +323,13 @@ export function useGetDashboard() {
         return roundMatches.some((m: any) => m.status !== "completed");
       }) ?? "Group Stage";
 
-      // leaderboard preview
-      const { data: users } = await supabase.from("users").select("id, name, avatar_url");
+      // leaderboard preview scoped to user's org
+      let usersQuery = supabase.from("users").select("id, name, avatar_url");
+      if (me.organization_id) usersQuery = usersQuery.eq("organization_id", me.organization_id);
+      const { data: orgUsers } = await usersQuery;
       const scoreMap: Record<number, number> = {};
       for (const p of lbRes.data ?? []) scoreMap[p.user_id] = (scoreMap[p.user_id] ?? 0) + (p.points ?? 0);
-      const leaderboardPreview = (users ?? [])
+      const leaderboardPreview = (orgUsers ?? [])
         .map((u: any) => ({ userId: u.id, name: u.name, avatarUrl: u.avatar_url, totalPoints: scoreMap[u.id] ?? 0 }))
         .sort((a: any, b: any) => b.totalPoints - a.totalPoints)
         .slice(0, 5)
@@ -322,7 +340,13 @@ export function useGetDashboard() {
       const totalPoints = myPreds.reduce((s: number, p: any) => s + (p.points ?? 0), 0);
       const exact = myPreds.filter((p: any) => p.points === 5).length;
       const correct = myPreds.filter((p: any) => p.points === 4 || p.points === 3).length;
-      const allScores = Object.values(scoreMap).sort((a, b) => b - a);
+      const orgUserIds = new Set((orgUsers ?? []).map((u: any) => u.id));
+      const orgScoreMap: Record<number, number> = {};
+      for (const p of lbRes.data ?? []) {
+        if (!orgUserIds.has(p.user_id)) continue;
+        orgScoreMap[p.user_id] = (orgScoreMap[p.user_id] ?? 0) + (p.points ?? 0);
+      }
+      const allScores = Object.values(orgScoreMap).sort((a, b) => b - a);
       const rank = allScores.findIndex(s => s <= totalPoints) + 1 || 1;
 
       return {
@@ -337,6 +361,19 @@ export function useGetDashboard() {
     enabled: !!userId,
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
+  });
+}
+
+// ── Organizations ──────────────────────────────────────────────────────────────
+
+export function useListOrganizations() {
+  return useQuery({
+    queryKey: ["organizations"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("*").order("name");
+      if (error) throw error;
+      return data as Organization[];
+    },
   });
 }
 

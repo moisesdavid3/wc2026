@@ -1,11 +1,19 @@
-import { useGetLeaderboard, useGetMyStats } from "@/lib/hooks";
+import { useState } from "react";
+import { useGetLeaderboard, useGetMyStats, useGetMe, useListOrganizations } from "@/lib/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trophy, Medal, Award } from "lucide-react";
 
 export function Leaderboard() {
-  const { data: leaderboard, isLoading } = useGetLeaderboard();
-  const { data: myStats } = useGetMyStats();
+  const { data: user } = useGetMe();
+  const { data: organizations } = useListOrganizations();
+  const isAdmin = user?.role === 'admin';
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("all");
+  const orgId = isAdmin ? (selectedOrgId !== "all" ? parseInt(selectedOrgId) : null) : (user?.organization_id ?? null);
+  const { data: leaderboard, isLoading } = useGetLeaderboard(orgId);
+  const { data: myStats } = useGetMyStats(orgId);
+  const orgName = orgId ? organizations?.find(o => o.id === orgId)?.name : 'Todas las organizaciones';
 
   if (isLoading || !leaderboard) {
     return <div className="animate-pulse space-y-4">
@@ -19,62 +27,32 @@ export function Leaderboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight uppercase">Clasificación</h1>
-          <p className="text-muted-foreground mt-1">Clasificación global</p>
+          <p className="text-muted-foreground mt-1">{orgName || 'Clasificación'}</p>
         </div>
-        {myStats && (
-          <div className="text-right">
-            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Tu Posición</div>
-            <div className="text-3xl font-black text-primary">#{myStats.rank}</div>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          {isAdmin && organizations && (
+            <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+              <SelectTrigger className="w-[200px] bg-background border-border">
+                <SelectValue placeholder="Todas las org" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las organizaciones</SelectItem>
+                {organizations.map(o => (
+                  <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {myStats && (
+            <div className="text-right">
+              <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-1">Tu Posición</div>
+              <div className="text-3xl font-black text-primary">#{myStats.rank}</div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Top 3 Podium */}
-      {leaderboard.length >= 3 && (
-        <div className="flex items-end justify-center gap-4 md:gap-8 pt-12 pb-8">
-          {/* Rank 2 */}
-          <div className="flex flex-col items-center order-1 pb-4">
-            <Avatar className="w-16 h-16 border-4 border-slate-300">
-              <AvatarImage src={leaderboard[1].avatarUrl || ''} />
-              <AvatarFallback>{leaderboard[1].name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="mt-4 font-bold text-center">{leaderboard[1].name}</div>
-            <div className="text-primary font-black">{leaderboard[1].totalPoints} pts</div>
-            <div className="w-20 h-24 bg-slate-300 rounded-t-lg mt-4 flex justify-center pt-2">
-              <span className="font-black text-slate-500 text-2xl">2</span>
-            </div>
-          </div>
-          
-          {/* Rank 1 */}
-          <div className="flex flex-col items-center order-2">
-            <Trophy className="w-10 h-10 text-yellow-400 mb-2" />
-            <Avatar className="w-24 h-24 border-4 border-yellow-400">
-              <AvatarImage src={leaderboard[0].avatarUrl || ''} />
-              <AvatarFallback>{leaderboard[0].name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="mt-4 font-bold text-xl text-center">{leaderboard[0].name}</div>
-            <div className="text-primary font-black text-xl">{leaderboard[0].totalPoints} pts</div>
-            <div className="w-24 h-32 bg-yellow-400 rounded-t-lg mt-4 flex justify-center pt-2">
-              <span className="font-black text-yellow-600 text-3xl">1</span>
-            </div>
-          </div>
-
-          {/* Rank 3 */}
-          <div className="flex flex-col items-center order-3 pb-8">
-            <Avatar className="w-14 h-14 border-4 border-[#CE1126]">
-              <AvatarImage src={leaderboard[2].avatarUrl || ''} />
-              <AvatarFallback>{leaderboard[2].name.substring(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="mt-4 font-bold text-center text-sm">{leaderboard[2].name}</div>
-            <div className="text-primary font-black text-sm">{leaderboard[2].totalPoints} pts</div>
-            <div className="w-16 h-16 bg-[#CE1126] rounded-t-lg mt-4 flex justify-center pt-2">
-              <span className="font-black text-white text-xl">3</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <Card className="bg-card border-border overflow-hidden">
+      <Card className="bg-card border-border overflow-hidden mt-6">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>

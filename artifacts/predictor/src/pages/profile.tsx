@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export function Profile() {
   const { data: user, isLoading: isLoadingUser } = useGetMe();
-  const { data: stats, isLoading: isLoadingStats } = useGetMyStats();
+  const { data: stats, isLoading: isLoadingStats } = useGetMyStats(user?.organization_id ?? null);
   const { data: predictions, isLoading: isLoadingPreds } = useListMyPredictions();
   const { data: matches, isLoading: isLoadingMatches } = useListMatches();
 

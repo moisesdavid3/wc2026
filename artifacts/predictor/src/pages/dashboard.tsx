@@ -1,4 +1,4 @@
-import { useGetDashboard } from "@/lib/hooks";
+import { useGetDashboard, useListOrganizations } from "@/lib/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Target, CheckCircle2, TrendingUp, ChevronRight } from "lucide-react";
 import { Countdown } from "@/components/countdown";
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard();
+  const { data: organizations } = useListOrganizations();
 
   if (isLoading || !dashboard) {
     return (
@@ -33,6 +34,7 @@ export function Dashboard() {
       <div>
           <h1 className="text-3xl font-black tracking-tight uppercase">Panel</h1>
         <p className="text-muted-foreground mt-1">
+          {organizations?.find(o => o.id === dashboard.user.organization_id)?.name ? `${organizations.find(o => o.id === dashboard.user.organization_id)?.name} • ` : ''}
           {tournamentProgress.currentRound} • {tournamentProgress.finishedMatches} / {tournamentProgress.totalMatches} Partidos Jugados
         </p>
       </div>

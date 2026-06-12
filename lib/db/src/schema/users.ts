@@ -1,6 +1,7 @@
-import { pgTable, text, serial, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, serial, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { organizationsTable } from "./organizations";
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -8,6 +9,7 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   avatarUrl: text("avatar_url"),
   role: text("role").notNull().default("user"),
+  organizationId: integer("organization_id").references(() => organizationsTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
