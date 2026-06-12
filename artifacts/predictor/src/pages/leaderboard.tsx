@@ -9,7 +9,7 @@ export function Leaderboard() {
   const { data: user } = useGetMe();
   const { data: organizations } = useListOrganizations();
   const isAdmin = user?.role === 'admin';
-  const [selectedOrgId, setSelectedOrgId] = useState<string>("all");
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("1");
   const orgId = isAdmin ? (selectedOrgId !== "all" ? parseInt(selectedOrgId) : null) : (user?.organization_id ?? null);
   const { data: leaderboard, isLoading } = useGetLeaderboard(orgId);
   const { data: myStats } = useGetMyStats(orgId);
