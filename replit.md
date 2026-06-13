@@ -10,7 +10,7 @@ A prediction pool app for FIFA World Cup 2026 — users predict match scores, ea
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
-- Required env (for auto-sync): `API_FOOTBALL_KEY` — API key from https://api-sports.io (free tier: 100 req/day)
+- Required env (for auto-sync): `FOOTBALL_DATA_KEY` — API key from https://www.football-data.org (free tier: 10 req/min, includes FIFA World Cup)
 - The sync uses smart polling: polls at each match's estimated end time (kickoff + 2h), retrying every 10min if no final result yet
 
 ## Stack
