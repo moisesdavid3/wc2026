@@ -3,11 +3,10 @@ import { eq, and, ne } from "drizzle-orm";
 import { calculatePoints } from "./scoring";
 import { logger } from "./logger";
 
-const API_BASE = "https://v3.football.api-sports.io";
-const LEAGUE_ID = 1;
-const SEASON = 2026;
+const API_BASE = "https://api.football-data.org/v4";
+const COMPETITION_CODE = "WC";
 
-const FINISHED_STATUSES = new Set(["FT", "AET", "PEN"]);
+const FINISHED_STATUS = "FINISHED";
 
 type SyncResult = {
   updated: number;
@@ -15,82 +14,64 @@ type SyncResult = {
   skipped: number;
 };
 
-type ApiTeam = {
-  team: {
+type FdMatch = {
+  id: number;
+  utcDate: string;
+  status: string;
+  matchday: number;
+  stage: string;
+  group?: string;
+  homeTeam: {
     id: number;
     name: string;
-    code: string;
+    tla: string;
   };
-};
-
-type ApiFixture = {
-  fixture: {
+  awayTeam: {
     id: number;
-    date: string;
-    status: { short: string };
+    name: string;
+    tla: string;
   };
-  teams: {
-    home: { id: number; name: string };
-    away: { id: number; name: string };
-  };
-  goals: {
-    home: number | null;
-    away: number | null;
+  score: {
+    winner: string | null;
+    duration: string;
+    fullTime: {
+      home: number | null;
+      away: number | null;
+    };
   };
 };
 
-let teamCodeCache: Map<number, string> | null = null;
+type FdMatchesResponse = {
+  count: number;
+  filters: Record<string, unknown>;
+  competition: Record<string, unknown>;
+  matches: FdMatch[];
+};
 
 function getApiKey(): string {
-  const key = process.env["API_FOOTBALL_KEY"];
-  if (!key) throw new Error("API_FOOTBALL_KEY environment variable is required");
+  const key = process.env["FOOTBALL_DATA_KEY"];
+  if (!key) throw new Error("FOOTBALL_DATA_KEY environment variable is required");
   return key;
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "x-apisports-key": getApiKey() },
+    headers: { "X-Auth-Token": getApiKey() },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`API-Football responded with ${res.status}: ${text}`);
+    throw new Error(`football-data.org responded with ${res.status}: ${text}`);
   }
-  const data = (await res.json()) as { response: T };
-  return data.response;
-}
-
-async function buildTeamCodeMap(): Promise<Map<number, string>> {
-  if (teamCodeCache) return teamCodeCache;
-
-  const teams = await apiFetch<ApiTeam[]>(`/teams?league=${LEAGUE_ID}&season=${SEASON}`);
-  const map = new Map<number, string>();
-
-  for (const entry of teams) {
-    const code = entry.team.code?.trim();
-    if (code && code.length > 0) {
-      map.set(entry.team.id, code);
-    }
-  }
-
-  teamCodeCache = map;
-  logger.info({ teamCount: map.size }, "Team code map built");
-  return map;
-}
-
-function isFinished(status: string): boolean {
-  return FINISHED_STATUSES.has(status);
+  return res.json() as Promise<T>;
 }
 
 export async function syncResultsFromApi(): Promise<SyncResult> {
   const result: SyncResult = { updated: 0, errors: 0, skipped: 0 };
 
   try {
-    const [teamCodeMap, fixtures] = await Promise.all([
-      buildTeamCodeMap(),
-      apiFetch<ApiFixture[]>(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`),
-    ]);
+    const data = await apiFetch<FdMatchesResponse>(`/competitions/${COMPETITION_CODE}/matches`);
 
-    logger.info({ totalFixtures: fixtures.length }, "Fetched fixtures from API-Football");
+    logger.info({ totalMatches: data.matches.length }, "Fetched matches from football-data.org");
 
     const teamByCode = new Map<string, typeof teamsTable.$inferSelect>();
     const dbTeams = await db.select().from(teamsTable);
@@ -98,30 +79,29 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
       teamByCode.set(t.code, t);
     }
 
-    for (const fixture of fixtures) {
-      const status = fixture.fixture.status.short;
-      if (!isFinished(status)) continue;
+    for (const match of data.matches) {
+      if (match.status !== FINISHED_STATUS) continue;
 
-      const homeScore = fixture.goals.home;
-      const awayScore = fixture.goals.away;
+      const homeScore = match.score.fullTime.home;
+      const awayScore = match.score.fullTime.away;
       if (homeScore === null || awayScore === null) continue;
 
-      const homeCode = teamCodeMap.get(fixture.teams.home.id);
-      const awayCode = teamCodeMap.get(fixture.teams.away.id);
-      if (!homeCode || !awayCode) {
-        result.skipped++;
-        continue;
-      }
+      const homeCode = match.homeTeam.tla;
+      const awayCode = match.awayTeam.tla;
 
       const homeTeam = teamByCode.get(homeCode);
       const awayTeam = teamByCode.get(awayCode);
       if (!homeTeam || !awayTeam) {
+        logger.warn(
+          { homeCode, awayCode },
+          "Team code not found in database",
+        );
         result.skipped++;
         continue;
       }
 
       try {
-        const [match] = await db
+        const [dbMatch] = await db
           .select()
           .from(matchesTable)
           .where(
@@ -132,7 +112,7 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
           )
           .limit(1);
 
-        if (!match) {
+        if (!dbMatch) {
           logger.warn(
             { homeTeam: homeTeam.name, awayTeam: awayTeam.name },
             "Match not found in database",
@@ -141,7 +121,7 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
           continue;
         }
 
-        if (match.status === "finished") {
+        if (dbMatch.status === "finished") {
           result.skipped++;
           continue;
         }
@@ -153,12 +133,12 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
             awayScore,
             status: "finished",
           })
-          .where(eq(matchesTable.id, match.id));
+          .where(eq(matchesTable.id, dbMatch.id));
 
         const preds = await db
           .select()
           .from(predictionsTable)
-          .where(eq(predictionsTable.matchId, match.id));
+          .where(eq(predictionsTable.matchId, dbMatch.id));
 
         for (const pred of preds) {
           const points = calculatePoints(pred.homeScore, pred.awayScore, homeScore, awayScore);
@@ -170,14 +150,14 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
 
         logger.info(
           {
-            matchNumber: match.matchNumber,
+            matchNumber: dbMatch.matchNumber,
             homeTeam: homeTeam.name,
             awayTeam: awayTeam.name,
             homeScore,
             awayScore,
             predictionsRecalculated: preds.length,
           },
-          "Match result synced from API-Football",
+          "Match result synced from football-data.org",
         );
         result.updated++;
       } catch (err) {
@@ -189,7 +169,7 @@ export async function syncResultsFromApi(): Promise<SyncResult> {
       }
     }
   } catch (err) {
-    logger.error({ err }, "Error fetching from API-Football");
+    logger.error({ err }, "Error fetching from football-data.org");
     result.errors++;
   }
 
@@ -216,16 +196,13 @@ export async function getNextPollDelay(): Promise<number> {
     const matchEnd = match.matchDate.getTime() + MATCH_DURATION_MS;
 
     if (now >= matchEnd) {
-      // Past estimated end but no result yet → retry in 10 min
       const delay = 10 * 60 * 1000;
       if (delay < nextDelay) nextDelay = delay;
     } else {
-      // Future or in-progress → schedule exactly at estimated end
       const delay = matchEnd - now;
       if (delay < nextDelay) nextDelay = delay;
     }
   }
 
-  // Past matches always get 10-min retry; otherwise use calculated delay
   return Math.max(nextDelay, MIN_DELAY_MS);
 }

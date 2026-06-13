@@ -26,8 +26,8 @@ app.listen(port, (err) => {
 
   // Smart polling: sync based on match schedules, not a fixed interval
   // Only polls around match end times, respecting the 100 req/day free limit
-  if (!process.env["API_FOOTBALL_KEY"]) {
-    logger.warn("API_FOOTBALL_KEY not set — match auto-sync disabled");
+  if (!process.env["FOOTBALL_DATA_KEY"]) {
+    logger.warn("FOOTBALL_DATA_KEY not set — match auto-sync disabled");
   } else {
     async function scheduleSync() {
       try {
