@@ -23,6 +23,11 @@ export function Admin() {
   const queryClient = useQueryClient();
 
   const [scores, setScores] = useState<Record<number, {home: string, away: string}>>({});
+  const [resultFilter, setResultFilter] = useState<"siguientes" | "completados">("siguientes");
+
+  const filteredMatches = matches?.filter(m =>
+    resultFilter === "completados" ? m.status === "completed" : m.status !== "completed"
+  );
 
   if (isLoadingUser || isLoadingMatches || isLoadingUsers) {
     return <div className="animate-pulse h-64 bg-card rounded-xl"></div>;
@@ -120,11 +125,25 @@ export function Admin() {
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Match Results */}
         <Card className="bg-card border-border">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="uppercase tracking-widest text-primary">Resultados</CardTitle>
+            <div className="flex gap-1 bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setResultFilter("siguientes")}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${resultFilter === "siguientes" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Siguientes
+              </button>
+              <button
+                onClick={() => setResultFilter("completados")}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${resultFilter === "completados" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Completados
+              </button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-            {matches?.map(match => (
+            {filteredMatches?.map(match => (
               <div key={match.id} className="p-4 border border-border rounded-lg bg-background space-y-4">
                 <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase">
                   <span>{match.group || match.round}</span>
