@@ -66,7 +66,7 @@ export function Leaderboard() {
             </thead>
             <tbody className="divide-y divide-border">
               {leaderboard.map((entry) => (
-                <tr key={entry.userId} className={`hover:bg-muted/50 transition-colors ${myStats?.rank === entry.rank ? 'bg-primary/5' : ''}`}>
+                <tr key={entry.userId} className={`hover:bg-muted/50 transition-colors ${user?.id === entry.userId ? 'bg-primary/5' : ''}`}>
                   <td className="p-4 font-black text-muted-foreground text-center w-16">
                     {entry.rank === 1 ? <Trophy className="w-5 h-5 text-yellow-400 mx-auto" /> : 
                      entry.rank === 2 ? <Medal className="w-5 h-5 text-slate-300 mx-auto" /> : 
