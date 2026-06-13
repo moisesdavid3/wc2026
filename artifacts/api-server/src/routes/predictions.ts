@@ -47,8 +47,9 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: "Predictions are locked for this match" });
     return;
   }
-  if (new Date() >= new Date(match.matchDate)) {
-    res.status(400).json({ error: "Predictions are locked — match has started" });
+  const LOCK_BUFFER_MS = 10 * 60 * 1000;
+  if (new Date().getTime() >= new Date(match.matchDate).getTime() - LOCK_BUFFER_MS) {
+    res.status(400).json({ error: "Predictions are locked — match starts in less than 10 minutes" });
     return;
   }
 

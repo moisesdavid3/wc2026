@@ -146,7 +146,7 @@ export function Matches() {
             const isUpcoming = match.status === "upcoming";
             const isLive = match.status === "live";
             const isFinished = match.status === "finished" || match.status === "completed";
-            const isLockedSoon = isUpcoming && (new Date(match.matchDate).getTime() - Date.now()) < 60 * 60 * 1000;
+            const isLockedSoon = isUpcoming && (new Date(match.matchDate).getTime() - Date.now()) < 10 * 60 * 1000;
             const isLocked = isFinished || isLive || isLockedSoon;
             const cot = formatCOT(match.matchDate);
             const draft = scores[match.id];
