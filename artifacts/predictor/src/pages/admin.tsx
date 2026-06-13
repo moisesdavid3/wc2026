@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useListOrganizations, useUpdateUserRole, useUpdateMatchStatus, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
+import { useGetMe, useListMatches, useSetMatchResult, useListUsers, useListOrganizations, useUpdateUserRole, useUpdateMatchStatus, useSyncResults, getListMatchesQueryKey, getListUsersQueryKey } from "@/lib/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export function Admin() {
   const setMatchResult = useSetMatchResult();
   const updateUserRole = useUpdateUserRole();
   const updateMatchStatus = useUpdateMatchStatus();
+  const syncResults = useSyncResults();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -74,8 +75,8 @@ export function Admin() {
 
   const handleRoleChange = (userId: number, role: 'user' | 'admin') => {
     updateUserRole.mutate({
-      id: userId,
-      data: { role }
+      userId,
+      role
     }, {
       onSuccess: () => {
         toast({ title: "Rol actualizado" });
@@ -92,6 +93,28 @@ export function Admin() {
           <h1 className="text-3xl font-black tracking-tight uppercase">Panel Admin</h1>
           <p className="text-muted-foreground mt-1">Gestiona resultados y usuarios</p>
         </div>
+      </div>
+
+      <div className="flex gap-4 items-center">
+        <Button
+          onClick={() =>
+            syncResults.mutate(undefined, {
+              onSuccess: (data) => {
+                toast({ title: `Sincronizado: ${data.updated} actualizados, ${data.skipped} omitidos, ${data.errors} errores` });
+                queryClient.invalidateQueries({ queryKey: ["matches"] });
+                queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+                queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+              },
+              onError: () => {
+                toast({ title: "Error al sincronizar", variant: "destructive" });
+              },
+            })
+          }
+          disabled={syncResults.isPending}
+        >
+          {syncResults.isPending ? "Sincronizando..." : "Sincronizar Resultados"}
+        </Button>
+        <span className="text-xs text-muted-foreground">Desde football-data.org</span>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">

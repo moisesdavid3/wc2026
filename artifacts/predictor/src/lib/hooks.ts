@@ -499,6 +499,16 @@ export function useSetMatchResult() {
   });
 }
 
+export function useSyncResults() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/admin/sync-results", { method: "POST" });
+      if (!res.ok) throw new Error(await res.text().catch(() => "Sync failed"));
+      return res.json() as Promise<{ updated: number; errors: number; skipped: number }>;
+    },
+  });
+}
+
 export function useUpdateMatchStatus() {
   const qc = useQueryClient();
   return useMutation({

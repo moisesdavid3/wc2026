@@ -94,6 +94,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           );
         })}
+        {isAdmin && (
+          <Link href="/admin" className={`flex flex-col items-center gap-1 p-2 ${location === '/admin' ? 'text-primary' : 'text-muted-foreground'}`} data-testid="mobile-link-admin">
+            <ShieldAlert className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Admin</span>
+          </Link>
+        )}
       </nav>
     </div>
   );

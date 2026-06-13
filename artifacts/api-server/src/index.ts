@@ -1,3 +1,4 @@
+import "dotenv/config";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { syncResultsFromApi, getNextPollDelay } from "./lib/sync-results";

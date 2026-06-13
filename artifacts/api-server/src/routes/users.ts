@@ -15,7 +15,7 @@ router.post("/users", async (req, res): Promise<void> => {
 
   const [user] = await db
     .insert(usersTable)
-    .values({ name: parsed.data.name, email: parsed.data.email ?? null })
+    .values({ name: parsed.data.name, email: parsed.data.email ?? "" })
     .returning();
 
   res.json(CreateUserResponse.parse({ ...user, createdAt: user.createdAt.toISOString() }));
