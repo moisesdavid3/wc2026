@@ -59,7 +59,12 @@ export function Profile() {
   const matchMap = new Map((matches || []).map(m => [m.id, m]));
 
   const completedPredictions = (predictions || []).filter(p => p.points !== null && p.points !== undefined);
-  completedPredictions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  completedPredictions.sort((a, b) => {
+    const ma = matchMap.get(a.matchId);
+    const mb = matchMap.get(b.matchId);
+    if (!ma || !mb) return 0;
+    return new Date(ma.matchDate).getTime() - new Date(mb.matchDate).getTime();
+  });
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
