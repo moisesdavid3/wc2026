@@ -24,6 +24,11 @@ export function Admin() {
 
   const [scores, setScores] = useState<Record<number, {home: string, away: string}>>({});
   const [resultFilter, setResultFilter] = useState<"siguientes" | "completados">("siguientes");
+  const [userOrgFilter, setUserOrgFilter] = useState<string>("all");
+
+  const filteredUsers = users?.filter(u =>
+    userOrgFilter === "all" ? true : u.organization_id === parseInt(userOrgFilter)
+  );
 
   const filteredMatches = matches?.filter(m =>
     resultFilter === "completados" ? m.status === "completed" : m.status !== "completed"
@@ -206,12 +211,23 @@ export function Admin() {
 
         {/* Users */}
         <Card className="bg-card border-border">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="uppercase tracking-widest text-primary">Usuarios</CardTitle>
+            <Select value={userOrgFilter} onValueChange={setUserOrgFilter}>
+              <SelectTrigger className="w-[160px] h-8 text-xs bg-background border-border">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las org</SelectItem>
+                {organizations?.map(o => (
+                  <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent className="max-h-[600px] overflow-y-auto pr-2">
             <div className="divide-y divide-border">
-              {users?.map(u => (
+              {filteredUsers?.map(u => (
                 <div key={u.id} className="py-3 flex items-center justify-between">
                   <div>
                     <div className="font-bold">{u.name}</div>
