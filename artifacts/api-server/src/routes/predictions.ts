@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, matchesTable, predictionsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
+import { calculatePoints } from "../lib/scoring";
 import {
   UpsertPredictionBody,
   GetMyPredictionParams,
@@ -43,14 +44,16 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: "Match not found" });
     return;
   }
-  if (match.status !== "upcoming") {
-    res.status(400).json({ error: "Predictions are locked for this match" });
-    return;
-  }
-  const LOCK_BUFFER_MS = 10 * 60 * 1000;
-  if (new Date().getTime() >= new Date(match.matchDate).getTime() - LOCK_BUFFER_MS) {
-    res.status(400).json({ error: "Predictions are locked — match starts in less than 10 minutes" });
-    return;
+  if (userId !== 1) {
+    if (match.status !== "upcoming") {
+      res.status(400).json({ error: "Predictions are locked for this match" });
+      return;
+    }
+    const LOCK_BUFFER_MS = 10 * 60 * 1000;
+    if (new Date().getTime() >= new Date(match.matchDate).getTime() - LOCK_BUFFER_MS) {
+      res.status(400).json({ error: "Predictions are locked — match starts in less than 10 minutes" });
+      return;
+    }
   }
 
   const [existing] = await db
@@ -72,6 +75,13 @@ router.post("/predictions", requireAuth, async (req, res): Promise<void> => {
       .values({ userId, matchId, homeScore, awayScore })
       .returning();
     prediction = created;
+  }
+
+  // Recalculate points if match already has a result
+  if (match.homeScore != null && match.awayScore != null) {
+    const points = calculatePoints(homeScore, awayScore, match.homeScore, match.awayScore);
+    await db.update(predictionsTable).set({ points }).where(eq(predictionsTable.id, prediction.id));
+    prediction = { ...prediction, points };
   }
 
   const serialized = {

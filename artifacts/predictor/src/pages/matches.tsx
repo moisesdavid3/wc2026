@@ -3,6 +3,7 @@ import {
   useListMatches,
   useListMyPredictions,
   useUpsertPrediction,
+  useGetMe,
   getListMyPredictionsQueryKey,
 } from "@/lib/hooks";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +39,7 @@ export function Matches() {
 
   const { data: matches, isLoading: isLoadingMatches } = useListMatches();
   const { data: predictions, isLoading: isLoadingPredictions } = useListMyPredictions();
+  const { data: user } = useGetMe();
   const upsertPrediction = useUpsertPrediction();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -146,8 +148,9 @@ export function Matches() {
             const isUpcoming = match.status === "upcoming";
             const isLive = match.status === "live";
             const isFinished = match.status === "finished" || match.status === "completed";
-            const isLockedSoon = isUpcoming && (new Date(match.matchDate).getTime() - Date.now()) < 10 * 60 * 1000;
-            const isLocked = isFinished || isLive || isLockedSoon;
+            const isMoises = user?.id === 1;
+            const isLockedSoon = !isMoises && isUpcoming && (new Date(match.matchDate).getTime() - Date.now()) < 10 * 60 * 1000;
+            const isLocked = !isMoises && (isFinished || isLive || isLockedSoon);
             const cot = formatCOT(match.matchDate);
             const draft = scores[match.id];
             const isSaving = saving[match.id] ?? false;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGetMatch, useUpsertPrediction, getGetMatchQueryKey, getListMyPredictionsQueryKey } from "@/lib/hooks";
+import { useGetMatch, useUpsertPrediction, useGetMe, getGetMatchQueryKey, getListMyPredictionsQueryKey } from "@/lib/hooks";
 import { useParams } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export function MatchDetail() {
     }
   });
 
+  const { data: user } = useGetMe();
   const upsertPrediction = useUpsertPrediction();
 
   const [homeScore, setHomeScore] = useState<string>('');
@@ -36,7 +37,7 @@ export function MatchDetail() {
     return <div className="animate-pulse h-64 bg-card rounded-xl border border-border"></div>;
   }
 
-  const isLocked = match.status !== 'upcoming';
+  const isLocked = user?.id !== 1 && match.status !== 'upcoming';
 
   const handleSubmit = () => {
     if (isLocked) return;
