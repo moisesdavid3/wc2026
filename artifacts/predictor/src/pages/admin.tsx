@@ -209,7 +209,7 @@ export function Admin() {
           <CardHeader>
             <CardTitle className="uppercase tracking-widest text-primary">Usuarios</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-[600px] overflow-y-auto pr-2">
             <div className="divide-y divide-border">
               {users?.map(u => (
                 <div key={u.id} className="py-3 flex items-center justify-between">
