@@ -236,18 +236,9 @@ export function Admin() {
                       {organizations?.find(o => o.id === u.organization_id)?.name ?? '—'}
                     </div>
                   </div>
-                  <Select 
-                    value={u.role} 
-                    onValueChange={(val) => handleRoleChange(u.id, val as 'user' | 'admin')}
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">Usuario</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <span className={`text-xs font-bold px-2 py-1 rounded ${u.role === 'admin' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                    {u.role === 'admin' ? 'Admin' : 'Usuario'}
+                  </span>
                 </div>
               ))}
             </div>
